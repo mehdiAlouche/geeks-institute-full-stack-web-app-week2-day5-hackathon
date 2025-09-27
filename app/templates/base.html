@@ -159,6 +159,8 @@
           localStorage.setItem('auth_token', token);
           localStorage.setItem('current_user', JSON.stringify(user));
           this.showFlash('Login successful!', 'success');
+          // Refresh navbar to show user info
+          this.refreshNavbar();
         },
         
         // Logout user
@@ -166,9 +168,42 @@
           localStorage.removeItem('auth_token');
           localStorage.removeItem('current_user');
           this.showFlash('Logged out successfully', 'info');
+          // Refresh navbar to hide user info
+          this.refreshNavbar();
           window.location.href = '/';
+        },
+        
+        // Refresh navbar component
+        refreshNavbar: function() {
+          const navbar = document.querySelector('navbar-component');
+          if (navbar) {
+            // Small delay to ensure authentication state is updated
+            setTimeout(() => {
+              navbar.connectedCallback();
+            }, 100);
+          }
+        },
+        
+        // Listen for authentication changes
+        onAuthChange: function() {
+          this.refreshNavbar();
         }
       };
+      
+      // Listen for storage changes (login/logout from other tabs)
+      window.addEventListener('storage', function(e) {
+        if (e.key === 'auth_token' || e.key === 'current_user') {
+          window.SchoolApp.refreshNavbar();
+        }
+      });
+      
+      // Refresh navbar when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        // Small delay to ensure all components are loaded
+        setTimeout(() => {
+          window.SchoolApp.refreshNavbar();
+        }, 100);
+      });
       
       // Initialize app
       document.addEventListener('DOMContentLoaded', function() {

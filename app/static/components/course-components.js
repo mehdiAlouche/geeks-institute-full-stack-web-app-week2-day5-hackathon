@@ -1,4 +1,7 @@
-const html = String.raw;
+// Use global html function if available, otherwise create it
+if (typeof html === 'undefined') {
+  window.html = String.raw;
+}
 
 // Course Card Component
 class CourseCard extends HTMLElement {
@@ -167,13 +170,16 @@ class CourseList extends HTMLElement {
     }
 
     if (this.courses.length === 0) {
+      const user = window.SchoolApp?.getCurrentUser();
+      const canCreateCourse = user?.role === 'teacher' || user?.role === 'admin';
+      
       this.innerHTML = html`
         <empty-state 
           title="No courses available"
           description="There are no courses to display at the moment."
           icon="bi-book"
-          action-text="Create Course"
-          action-href="/courses/create"
+          ${canCreateCourse ? 'action-text="Create Course"' : ''}
+          ${canCreateCourse ? 'action-href="/courses/create"' : ''}
         ></empty-state>
       `;
       return;

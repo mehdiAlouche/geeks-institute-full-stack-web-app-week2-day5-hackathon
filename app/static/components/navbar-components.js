@@ -24,34 +24,48 @@ class Navbar extends HTMLElement {
               </a>
             </div>
 
-            <!-- Desktop Navigation -->
-            <div class="hidden md:flex items-center space-x-8">
-              <a href="${isAuthenticated ? (user?.role === 'student' ? '/student-dashboard' : '/dashboard') : '/'}" class="text-gray-700 hover:text-blue-600 transition-colors">
-                <i class="bi bi-house-door mr-1"></i>${isAuthenticated ? 'Dashboard' : 'Home'}
-              </a>
-              <a href="/courses" class="text-gray-700 hover:text-blue-600 transition-colors">
-                <i class="bi bi-book mr-1"></i>Courses
-              </a>
-              ${isAuthenticated && user?.role === 'student' ? html`
-                <a href="/my-courses" class="text-gray-700 hover:text-blue-600 transition-colors">
-                  <i class="bi bi-collection-play mr-1"></i>My Courses
+            <!-- Desktop Navigation - Only show when logged in -->
+            ${isAuthenticated ? html`
+              <div class="hidden md:flex items-center space-x-8">
+                <a href="/" class="text-gray-700 hover:text-blue-600 transition-colors">
+                  <i class="bi bi-house-door mr-1"></i>Home
                 </a>
-              ` : ''}
-              ${isAuthenticated && user?.role === 'teacher' ? html`
-                <a href="/courses/create" class="text-gray-700 hover:text-blue-600 transition-colors">
-                  <i class="bi bi-plus-circle mr-1"></i>Create Course
+                <a href="/courses" class="text-gray-700 hover:text-blue-600 transition-colors">
+                  <i class="bi bi-book mr-1"></i>Courses
                 </a>
-              ` : ''}
-              ${isAuthenticated && user?.role === 'admin' ? html`
-                <a href="/users" class="text-gray-700 hover:text-blue-600 transition-colors">
-                  <i class="bi bi-people mr-1"></i>Users
+                ${user?.role === 'student' ? html`
+                  <a href="/my-courses" class="text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="bi bi-collection-play mr-1"></i>My Courses
+                  </a>
+                ` : ''}
+                ${user?.role === 'teacher' ? html`
+                  <a href="/courses/create" class="text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="bi bi-plus-circle mr-1"></i>Create Course
+                  </a>
+                ` : ''}
+                ${user?.role === 'admin' ? html`
+                  <a href="/users" class="text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="bi bi-people mr-1"></i>Users
+                  </a>
+                ` : ''}
+              </div>
+            ` : html`
+              <!-- Show minimal navigation for guests -->
+              <div class="hidden md:flex items-center space-x-8">
+                <a href="/" class="text-gray-700 hover:text-blue-600 transition-colors">
+                  <i class="bi bi-house-door mr-1"></i>Home
                 </a>
-              ` : ''}
-            </div>
+              </div>
+            `}
 
             <!-- User Menu -->
             <div class="flex items-center space-x-4">
               ${isAuthenticated ? html`
+                <!-- Welcome Message -->
+                <div class="hidden md:block text-sm text-gray-600">
+                  Welcome, <span class="font-semibold text-gray-800">${user?.name || 'User'}</span>
+                </div>
+
                 <!-- Notifications -->
                 <button class="relative text-gray-700 hover:text-blue-600 transition-colors">
                   <i class="bi bi-bell text-xl"></i>
@@ -109,35 +123,48 @@ class Navbar extends HTMLElement {
           <!-- Mobile Menu -->
           <div class="md:hidden hidden" id="mobile-menu">
             <div class="px-2 pt-2 pb-3 space-y-1 bg-gray-50 rounded-lg mt-2">
-              <a href="${isAuthenticated ? (user?.role === 'student' ? '/student-dashboard' : '/dashboard') : '/'}" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
-                <i class="bi bi-house-door mr-2"></i>${isAuthenticated ? 'Dashboard' : 'Home'}
-              </a>
-              <a href="/courses" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
-                <i class="bi bi-book mr-2"></i>Courses
-              </a>
-              ${isAuthenticated && user?.role === 'student' ? html`
-                <a href="/my-courses" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
-                  <i class="bi bi-collection-play mr-2"></i>My Courses
+              ${isAuthenticated ? html`
+                <!-- Welcome message for mobile -->
+                <div class="px-3 py-2 text-sm text-gray-600 border-b border-gray-200">
+                  Welcome, <span class="font-semibold text-gray-800">${user?.name || 'User'}</span>
+                </div>
+                
+                <a href="/" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
+                  <i class="bi bi-house-door mr-2"></i>Home
                 </a>
-              ` : ''}
-              ${isAuthenticated && user?.role === 'teacher' ? html`
-                <a href="/courses/create" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
-                  <i class="bi bi-plus-circle mr-2"></i>Create Course
+                <a href="/courses" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
+                  <i class="bi bi-book mr-2"></i>Courses
                 </a>
-              ` : ''}
-              ${isAuthenticated && user?.role === 'admin' ? html`
-                <a href="/users" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
-                  <i class="bi bi-people mr-2"></i>Users
+                ${user?.role === 'student' ? html`
+                  <a href="/my-courses" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-collection-play mr-2"></i>My Courses
+                  </a>
+                ` : ''}
+                ${user?.role === 'teacher' ? html`
+                  <a href="/courses/create" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-plus-circle mr-2"></i>Create Course
+                  </a>
+                ` : ''}
+                ${user?.role === 'admin' ? html`
+                  <a href="/users" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-people mr-2"></i>Users
+                  </a>
+                ` : ''}
+                <hr class="my-1">
+                <button onclick="window.SchoolApp.logout()" class="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50">
+                  <i class="bi bi-box-arrow-right mr-2"></i>Logout
+                </button>
+              ` : html`
+                <a href="/" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
+                  <i class="bi bi-house-door mr-2"></i>Home
                 </a>
-              ` : ''}
-              ${!isAuthenticated ? html`
                 <a href="/login" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
                   <i class="bi bi-box-arrow-in-right mr-2"></i>Login
                 </a>
                 <a href="/register" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
                   <i class="bi bi-person-plus mr-2"></i>Register
                 </a>
-              ` : ''}
+              `}
             </div>
           </div>
         </div>

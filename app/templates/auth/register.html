@@ -78,17 +78,16 @@
         
         <div>
           <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
-          <select 
+          <input 
+            type="hidden" 
             id="role" 
             name="role" 
-            required 
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            value="student"
           >
-            <option value="">Select your role</option>
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-            <option value="admin">Admin</option>
-          </select>
+          <div class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-gray-100 rounded-md text-gray-700">
+            Student (Only students can register)
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Teacher and Admin accounts are created by system administrators only.</p>
         </div>
       </div>
 
@@ -162,12 +161,10 @@
       // Store auth data
       window.SchoolApp.login(response.access_token, response.user);
       
-      // Redirect to appropriate dashboard based on role
-      if (response.user.role === 'student') {
-        window.location.href = '/student-dashboard';
-      } else {
-        window.location.href = '/dashboard';
-      }
+      // Small delay to ensure navbar updates before redirect
+      setTimeout(() => {
+        window.location.href = '/courses';
+      }, 100);
       
     } catch (error) {
       console.error('Registration error:', error);
@@ -181,12 +178,7 @@
   // Check if already logged in
   document.addEventListener('DOMContentLoaded', function() {
     if (window.SchoolApp.isAuthenticated()) {
-      const user = window.SchoolApp.getCurrentUser();
-      if (user.role === 'student') {
-        window.location.href = '/student-dashboard';
-      } else {
-        window.location.href = '/dashboard';
-      }
+      window.location.href = '/courses';
     }
   });
 </script>

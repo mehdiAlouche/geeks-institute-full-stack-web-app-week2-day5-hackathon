@@ -78,31 +78,7 @@
         </button>
       </div>
 
-      <div class="mt-6">
-        <div class="relative">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-300" />
-          </div>
-          <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-gray-50 text-gray-500">Demo Accounts</span>
-          </div>
-        </div>
-
-        <div class="mt-6 grid grid-cols-1 gap-3">
-          <button type="button" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" onclick="fillDemoAccount('admin')">
-            <i class="bi bi-shield-check mr-2"></i>
-            Admin Account
-          </button>
-          <button type="button" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" onclick="fillDemoAccount('teacher')">
-            <i class="bi bi-person-badge mr-2"></i>
-            Teacher Account
-          </button>
-          <button type="button" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" onclick="fillDemoAccount('student')">
-            <i class="bi bi-person mr-2"></i>
-            Student Account
-          </button>
-        </div>
-      </div>
+      
     </form>
   </div>
 </div>
@@ -110,21 +86,7 @@
 
 {% block scripts %}
 <script>
-  // Demo account credentials
-  const demoAccounts = {
-    admin: { email: 'admin@school.com', password: 'example456' },
-    teacher: { email: 'john.teacher@school.com', password: 'example456' },
-    student: { email: 'mike.student@school.com', password: 'example456' }
-  };
-
-  // Fill demo account credentials
-  function fillDemoAccount(role) {
-    const account = demoAccounts[role];
-    if (account) {
-      document.getElementById('email').value = account.email;
-      document.getElementById('password').value = account.password;
-    }
-  }
+ 
 
   // Handle form submission
   document.getElementById('login-form').addEventListener('submit', async function(e) {
@@ -150,12 +112,10 @@
       // Store auth data
       window.SchoolApp.login(response.access_token, response.user);
       
-      // Redirect to appropriate dashboard based on role
-      if (response.user.role === 'student') {
-        window.location.href = '/student-dashboard';
-      } else {
-        window.location.href = '/dashboard';
-      }
+      // Small delay to ensure navbar updates before redirect
+      setTimeout(() => {
+        window.location.href = '/courses';
+      }, 100);
       
     } catch (error) {
       console.error('Login error:', error);
@@ -169,12 +129,7 @@
   // Check if already logged in
   document.addEventListener('DOMContentLoaded', function() {
     if (window.SchoolApp.isAuthenticated()) {
-      const user = window.SchoolApp.getCurrentUser();
-      if (user.role === 'student') {
-        window.location.href = '/student-dashboard';
-      } else {
-        window.location.href = '/dashboard';
-      }
+      window.location.href = '/courses';
     }
 
     // Auto-fill demo credentials if available

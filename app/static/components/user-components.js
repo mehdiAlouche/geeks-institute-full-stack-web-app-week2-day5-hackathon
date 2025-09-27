@@ -1,4 +1,7 @@
-const html = String.raw;
+// Use global html function if available, otherwise create it
+if (typeof html === 'undefined') {
+  window.html = String.raw;
+}
 
 // User Card Component
 class UserCard extends HTMLElement {

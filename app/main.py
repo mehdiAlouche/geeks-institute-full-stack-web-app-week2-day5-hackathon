@@ -9,9 +9,47 @@ from app.routes.files import bp as files_bp
 from app.routes.enrollments import bp as enrollments_bp
 from app.routes.comments import bp as comments_bp
 from app.routes.notifications import bp as notifications_bp
-from app.routes.auth import bp as auth_bp
+from app.routes.auth import bp as auth_bp, verify_token
 
 app = Flask(__name__)
+
+def require_teacher_or_admin():
+    """Decorator to require teacher or admin role for frontend routes"""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            token = request.cookies.get('auth_token') or request.headers.get('Authorization', '').replace('Bearer ', '')
+            if not token:
+                return redirect('/login')
+            
+            try:
+                user = verify_token(token)
+                if user['role'] not in ['teacher', 'admin']:
+                    return redirect('/courses')  # Redirect to courses page if not authorized
+                return func(*args, **kwargs)
+            except:
+                return redirect('/login')
+        wrapper.__name__ = func.__name__
+        return wrapper
+    return decorator
+
+def require_admin():
+    """Decorator to require admin role for frontend routes"""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            token = request.cookies.get('auth_token') or request.headers.get('Authorization', '').replace('Bearer ', '')
+            if not token:
+                return redirect('/login')
+            
+            try:
+                user = verify_token(token)
+                if user['role'] != 'admin':
+                    return redirect('/courses')  # Redirect to courses page if not admin
+                return func(*args, **kwargs)
+            except:
+                return redirect('/login')
+        wrapper.__name__ = func.__name__
+        return wrapper
+    return decorator
 
 # API Routes
 app.register_blueprint(users_bp, url_prefix="/api/users")
@@ -54,13 +92,15 @@ def course_detail(course_id):
     return render_template('courses/detail.html', course={'id': course_id})
 
 @app.route('/courses/create')
+@require_teacher_or_admin()
 def create_course():
-    """Create course page"""
+    """Create course page - only for teachers and admins"""
     return render_template('courses/create.html')
 
 @app.route('/users')
+@require_admin()
 def users():
-    """Users listing page"""
+    """Users listing page - only for admins"""
     return render_template('users/index.html')
 
 @app.route('/users/<user_id>')
