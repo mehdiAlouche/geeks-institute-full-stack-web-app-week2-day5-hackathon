@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Create Course - School Management System{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Create New Course</h1>
+          <p class="mt-2 text-gray-600">Build and publish your course content</p>
+        </div>
+        <a href="/courses" class="text-gray-600 hover:text-gray-900">
+          <i class="bi bi-arrow-left mr-2"></i>
+          Back to Courses
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Course Form -->
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <course-form></course-form>
+  </div>
+</div>
+{% endblock %}

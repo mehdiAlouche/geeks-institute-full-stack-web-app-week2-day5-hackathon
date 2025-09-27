@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - School Management System{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <!-- Hero Section -->
+  <div class="gradient-bg text-white py-16">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Welcome, Student!</h1>
+        <p class="text-xl md:text-2xl mb-8 opacity-90">Continue your learning journey</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/courses" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            <i class="bi bi-book mr-2"></i>
+            Browse Courses
+          </a>
+          <a href="/my-courses" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+            <i class="bi bi-collection-play mr-2"></i>
+            My Courses
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="max-w-7xl mx-auto px-4 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <stats-card 
+        title="Enrolled Courses" 
+        value="5" 
+        change="+2 this month" 
+        trend="up"
+        icon="<i class='bi bi-book'></i>"
+      ></stats-card>
+      <stats-card 
+        title="Completed Lessons" 
+        value="23" 
+        change="+8 this week" 
+        trend="up"
+        icon="<i class='bi bi-check-circle'></i>"
+      ></stats-card>
+      <stats-card 
+        title="Study Hours" 
+        value="47" 
+        change="+12 this month" 
+        trend="up"
+        icon="<i class='bi bi-clock'></i>"
+      ></stats-card>
+      <stats-card 
+        title="Certificates" 
+        value="2" 
+        change="+1 this month" 
+        trend="up"
+        icon="<i class='bi bi-award'></i>"
+      ></stats-card>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- My Courses -->
+      <div class="lg:col-span-2">
+        <app-card title="My Enrolled Courses" subtitle="Continue where you left off">
+          <div id="my-courses-list">
+            <loading-spinner></loading-spinner>
+          </div>
+        </app-card>
+      </div>
+
+      <!-- Quick Actions & Progress -->
+      <div class="space-y-6">
+        <!-- Quick Actions -->
+        <app-card title="Quick Actions" subtitle="Common tasks and shortcuts">
+          <div class="space-y-3">
+            <a href="/courses" class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+              <i class="bi bi-search text-blue-600 text-xl mr-3"></i>
+              <span class="text-gray-800">Discover New Courses</span>
+            </a>
+            <a href="/my-courses" class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+              <i class="bi bi-collection-play text-green-600 text-xl mr-3"></i>
+              <span class="text-gray-800">Continue Learning</span>
+            </a>
+            <a href="/notifications" class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+              <i class="bi bi-bell text-purple-600 text-xl mr-3"></i>
+              <span class="text-gray-800">View Notifications</span>
+            </a>
+            <a href="/profile" class="flex items-center p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
+              <i class="bi bi-person text-yellow-600 text-xl mr-3"></i>
+              <span class="text-gray-800">Update Profile</span>
+            </a>
+          </div>
+        </app-card>
+
+        <!-- Learning Progress -->
+        <app-card title="Learning Progress" subtitle="Your recent activity">
+          <div class="space-y-4">
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="bi bi-check-circle text-green-600 text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-800">Completed "React Hooks" lesson</p>
+                <p class="text-xs text-gray-500">2 hours ago</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <i class="bi bi-play-circle text-blue-600 text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-800">Started "JavaScript ES6" course</p>
+                <p class="text-xs text-gray-500">1 day ago</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <i class="bi bi-chat text-purple-600 text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-800">Commented on "CSS Grid" lesson</p>
+                <p class="text-xs text-gray-500">2 days ago</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <i class="bi bi-award text-yellow-600 text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-800">Earned "Web Development" certificate</p>
+                <p class="text-xs text-gray-500">1 week ago</p>
+              </div>
+            </div>
+          </div>
+        </app-card>
+      </div>
+    </div>
+
+    <!-- Available Courses Section -->
+    <div class="mt-12">
+      <app-card title="Available Courses" subtitle="Discover new courses to enroll in">
+        <course-list></course-list>
+      </app-card>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Load student's enrolled courses
+  document.addEventListener('DOMContentLoaded', async function() {
+    const coursesContainer = document.getElementById('my-courses-list');
+    
+    try {
+      const response = await window.SchoolApp.apiCall('/enrollments/my-courses');
+      const courses = response.courses || [];
+      
+      if (courses.length === 0) {
+        coursesContainer.innerHTML = `
+          <empty-state 
+            title="No enrolled courses"
+            description="You haven't enrolled in any courses yet. Start exploring!"
+            icon="bi-book"
+            action-text="Browse Courses"
+            action-href="/courses"
+          ></empty-state>
+        `;
+        return;
+      }
+      
+      coursesContainer.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          ${courses.map(course => `
+            <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+              <h3 class="font-semibold text-gray-800 mb-2">${course.title}</h3>
+              <p class="text-sm text-gray-600 mb-3">${course.description || 'No description'}</p>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-500">${course.teacher_name}</span>
+                <a href="/courses/${course.id}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                  Continue Learning →
+                </a>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+    } catch (error) {
+      console.error('Failed to load enrolled courses:', error);
+      coursesContainer.innerHTML = `
+        <app-alert type="error">
+          Failed to load your courses. Please try again.
+        </app-alert>
+      `;
+    }
+  });
+</script>
+{% endblock %}

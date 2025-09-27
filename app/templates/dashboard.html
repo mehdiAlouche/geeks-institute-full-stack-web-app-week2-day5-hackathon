@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - School Management System{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <!-- Hero Section -->
+  <div class="gradient-bg text-white py-16">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Welcome to SchoolApp</h1>
+        <p class="text-xl md:text-2xl mb-8 opacity-90">Your comprehensive school management platform</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/courses" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            <i class="bi bi-book mr-2"></i>
+            Browse Courses
+          </a>
+          <a href="/courses/create" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+            <i class="bi bi-plus-circle mr-2"></i>
+            Create Course
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="max-w-7xl mx-auto px-4 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <stats-card 
+        title="Total Courses" 
+        value="24" 
+        change="+12% from last month" 
+        trend="up"
+        icon="<i class='bi bi-book'></i>"
+      ></stats-card>
+      <stats-card 
+        title="Active Students" 
+        value="156" 
+        change="+8% from last month" 
+        trend="up"
+        icon="<i class='bi bi-people'></i>"
+      ></stats-card>
+      <stats-card 
+        title="Teachers" 
+        value="12" 
+        change="+2 new this month" 
+        trend="up"
+        icon="<i class='bi bi-person-badge'></i>"
+      ></stats-card>
+      <stats-card 
+        title="Completion Rate" 
+        value="87%" 
+        change="+5% from last month" 
+        trend="up"
+        icon="<i class='bi bi-graph-up'></i>"
+      ></stats-card>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Recent Courses -->
+      <div class="lg:col-span-2">
+        <app-card title="Recent Courses" subtitle="Latest courses added to the platform">
+          <course-list></course-list>
+        </app-card>
+      </div>
+
+      <!-- Quick Actions & Notifications -->
+      <div class="space-y-6">
+        <!-- Quick Actions -->
+        <app-card title="Quick Actions" subtitle="Common tasks and shortcuts">
+          <div class="space-y-3">
+            <a href="/courses/create" class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+              <i class="bi bi-plus-circle text-blue-600 text-xl mr-3"></i>
+              <span class="text-gray-800">Create New Course</span>
+            </a>
+            <a href="/users" class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+              <i class="bi bi-people text-green-600 text-xl mr-3"></i>
+              <span class="text-gray-800">Manage Users</span>
+            </a>
+            <a href="/files" class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+              <i class="bi bi-folder text-purple-600 text-xl mr-3"></i>
+              <span class="text-gray-800">Upload Files</span>
+            </a>
+            <a href="/notifications" class="flex items-center p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
+              <i class="bi bi-bell text-yellow-600 text-xl mr-3"></i>
+              <span class="text-gray-800">View Notifications</span>
+            </a>
+          </div>
+        </app-card>
+
+        <!-- Recent Activity -->
+        <app-card title="Recent Activity" subtitle="Latest updates and activities">
+          <div class="space-y-4">
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <i class="bi bi-book text-blue-600 text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-800">New course "Web Development" was created</p>
+                <p class="text-xs text-gray-500">2 hours ago</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="bi bi-person text-green-600 text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-800">5 new students enrolled</p>
+                <p class="text-xs text-gray-500">4 hours ago</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <i class="bi bi-file-earmark text-purple-600 text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-800">New file uploaded to "React Course"</p>
+                <p class="text-xs text-gray-500">6 hours ago</p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <i class="bi bi-chat text-yellow-600 text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-800">New comment on "JavaScript Basics"</p>
+                <p class="text-xs text-gray-500">8 hours ago</p>
+              </div>
+            </div>
+          </div>
+        </app-card>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="mt-12">
+      <app-card title="Analytics" subtitle="Course performance and engagement metrics">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Course Enrollment Chart -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Course Enrollments</h3>
+            <canvas id="enrollmentChart" width="400" height="200"></canvas>
+          </div>
+          
+          <!-- User Growth Chart -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">User Growth</h3>
+            <canvas id="userGrowthChart" width="400" height="200"></canvas>
+          </div>
+        </div>
+      </app-card>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Initialize charts when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    // Course Enrollment Chart
+    const enrollmentCtx = document.getElementById('enrollmentChart');
+    if (enrollmentCtx) {
+      new Chart(enrollmentCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Web Dev', 'React', 'Python', 'Data Science', 'Mobile Dev'],
+          datasets: [{
+            label: 'Enrollments',
+            data: [65, 59, 80, 81, 56],
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    // User Growth Chart
+    const userGrowthCtx = document.getElementById('userGrowthChart');
+    if (userGrowthCtx) {
+      new Chart(userGrowthCtx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            label: 'New Users',
+            data: [12, 19, 3, 5, 2, 3],
+            borderColor: 'rgba(16, 185, 129, 1)',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Users - School Management System{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
+          <p class="mt-2 text-gray-600">Manage users, roles, and permissions</p>
+        </div>
+        <a href="/users/create" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <i class="bi bi-person-plus mr-2"></i>
+          Add User
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users List -->
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <user-list></user-list>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Register - School Management System{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <div class="mx-auto h-12 w-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+        <i class="bi bi-person-plus text-white text-2xl"></i>
+      </div>
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        Create your account
+      </h2>
+      <p class="mt-2 text-center text-sm text-gray-600">
+        Or
+        <a href="/login" class="font-medium text-blue-600 hover:text-blue-500">
+          sign in to existing account
+        </a>
+      </p>
+    </div>
+    
+    <form class="mt-8 space-y-6" id="register-form">
+      <div class="space-y-4">
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+          <input 
+            id="name" 
+            name="name" 
+            type="text" 
+            autocomplete="name" 
+            required 
+            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+            placeholder="Enter your full name"
+          >
+        </div>
+        
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+          <input 
+            id="email" 
+            name="email" 
+            type="email" 
+            autocomplete="email" 
+            required 
+            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+            placeholder="Enter your email"
+          >
+        </div>
+        
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input 
+            id="password" 
+            name="password" 
+            type="password" 
+            autocomplete="new-password" 
+            required 
+            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+            placeholder="Create a password"
+            minlength="6"
+          >
+          <p class="mt-1 text-xs text-gray-500">Password must be at least 6 characters long</p>
+        </div>
+        
+        <div>
+          <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+          <input 
+            id="confirm-password" 
+            name="confirm-password" 
+            type="password" 
+            autocomplete="new-password" 
+            required 
+            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+            placeholder="Confirm your password"
+          >
+        </div>
+        
+        <div>
+          <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
+          <select 
+            id="role" 
+            name="role" 
+            required 
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          >
+            <option value="">Select your role</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center">
+        <input 
+          id="terms" 
+          name="terms" 
+          type="checkbox" 
+          required
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        >
+        <label for="terms" class="ml-2 block text-sm text-gray-900">
+          I agree to the 
+          <a href="#" class="text-blue-600 hover:text-blue-500">Terms of Service</a> 
+          and 
+          <a href="#" class="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+        </label>
+      </div>
+
+      <div>
+        <button type="submit" id="register-btn" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+          <i class="bi bi-person-plus mr-2"></i>
+          <span id="register-text">Create Account</span>
+          <div id="register-spinner" class="hidden">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          </div>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Handle form submission
+  document.getElementById('register-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const registerBtn = document.getElementById('register-btn');
+    const registerText = document.getElementById('register-text');
+    const registerSpinner = document.getElementById('register-spinner');
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    // Validate password confirmation
+    if (password !== confirmPassword) {
+      window.SchoolApp.showFlash('Passwords do not match', 'error');
+      return;
+    }
+    
+    // Show loading state
+    registerBtn.disabled = true;
+    registerText.textContent = 'Creating Account...';
+    registerSpinner.classList.remove('hidden');
+    
+    try {
+      const formData = new FormData(e.target);
+      const userData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        role: formData.get('role')
+      };
+      
+      const response = await window.SchoolApp.apiCall('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData)
+      });
+      
+      // Store auth data
+      window.SchoolApp.login(response.access_token, response.user);
+      
+      // Redirect to appropriate dashboard based on role
+      if (response.user.role === 'student') {
+        window.location.href = '/student-dashboard';
+      } else {
+        window.location.href = '/dashboard';
+      }
+      
+    } catch (error) {
+      console.error('Registration error:', error);
+      // Reset button state
+      registerBtn.disabled = false;
+      registerText.textContent = 'Create Account';
+      registerSpinner.classList.add('hidden');
+    }
+  });
+
+  // Check if already logged in
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.SchoolApp.isAuthenticated()) {
+      const user = window.SchoolApp.getCurrentUser();
+      if (user.role === 'student') {
+        window.location.href = '/student-dashboard';
+      } else {
+        window.location.href = '/dashboard';
+      }
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}SchoolApp - Modern Learning Management System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="gradient-bg text-white py-20">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center">
+      <h1 class="text-5xl md:text-6xl font-bold mb-6">
+        Welcome to <span class="text-yellow-300">SchoolApp</span>
+      </h1>
+      <p class="text-xl md:text-2xl mb-8 opacity-90 max-w-3xl mx-auto">
+        The modern learning management system that connects students, teachers, and administrators in one powerful platform.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/login" class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors shadow-lg">
+          <i class="bi bi-box-arrow-in-right mr-2"></i>
+          Get Started
+        </a>
+        <a href="#features" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition-colors">
+          <i class="bi bi-play-circle mr-2"></i>
+          Learn More
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-gray-900 mb-4">Why Choose SchoolApp?</h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Experience the future of education with our comprehensive learning management system
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Feature 1 -->
+      <div class="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
+        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="bi bi-book text-3xl text-blue-600"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Interactive Courses</h3>
+        <p class="text-gray-600">
+          Access engaging video lessons, downloadable materials, and interactive content designed for effective learning.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="bi bi-people text-3xl text-green-600"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Collaborative Learning</h3>
+        <p class="text-gray-600">
+          Connect with peers, ask questions, and participate in discussions to enhance your learning experience.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
+        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="bi bi-graph-up text-3xl text-purple-600"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Progress Tracking</h3>
+        <p class="text-gray-600">
+          Monitor your learning journey with detailed analytics and personalized progress reports.
+        </p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
+        <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="bi bi-mobile text-3xl text-yellow-600"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Mobile Ready</h3>
+        <p class="text-gray-600">
+          Learn anywhere, anytime with our fully responsive design that works on all devices.
+        </p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="bi bi-shield-check text-3xl text-red-600"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Secure Platform</h3>
+        <p class="text-gray-600">
+          Your data is protected with enterprise-grade security and privacy controls.
+        </p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
+        <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="bi bi-award text-3xl text-indigo-600"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Certificates</h3>
+        <p class="text-gray-600">
+          Earn certificates upon course completion to showcase your achievements.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-20 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Get started with SchoolApp in just a few simple steps
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Step 1 -->
+      <div class="text-center">
+        <div class="w-20 h-20 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+          1
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Sign Up</h3>
+        <p class="text-gray-600">
+          Create your account as a student, teacher, or administrator to get started.
+        </p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="text-center">
+        <div class="w-20 h-20 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+          2
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Explore Courses</h3>
+        <p class="text-gray-600">
+          Browse through our extensive library of courses and find what interests you.
+        </p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="text-center">
+        <div class="w-20 h-20 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+          3
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Start Learning</h3>
+        <p class="text-gray-600">
+          Enroll in courses, watch videos, complete assignments, and track your progress.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-20 bg-blue-600 text-white">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold mb-4">Join Thousands of Learners</h2>
+      <p class="text-xl opacity-90">Be part of our growing community</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+      <div>
+        <div class="text-4xl font-bold mb-2">10,000+</div>
+        <div class="text-lg opacity-90">Active Students</div>
+      </div>
+      <div>
+        <div class="text-4xl font-bold mb-2">500+</div>
+        <div class="text-lg opacity-90">Expert Teachers</div>
+      </div>
+      <div>
+        <div class="text-4xl font-bold mb-2">1,000+</div>
+        <div class="text-lg opacity-90">Courses Available</div>
+      </div>
+      <div>
+        <div class="text-4xl font-bold mb-2">95%</div>
+        <div class="text-lg opacity-90">Success Rate</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-gray-900 mb-4">What Our Users Say</h2>
+      <p class="text-xl text-gray-600">Hear from our community</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Testimonial 1 -->
+      <div class="bg-gray-50 p-6 rounded-lg">
+        <div class="flex items-center mb-4">
+          <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+            S
+          </div>
+          <div class="ml-4">
+            <div class="font-semibold text-gray-900">Sarah Johnson</div>
+            <div class="text-sm text-gray-600">Student</div>
+          </div>
+        </div>
+        <p class="text-gray-700">
+          "SchoolApp has transformed my learning experience. The interactive courses and community features make studying enjoyable and effective."
+        </p>
+      </div>
+
+      <!-- Testimonial 2 -->
+      <div class="bg-gray-50 p-6 rounded-lg">
+        <div class="flex items-center mb-4">
+          <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold">
+            M
+          </div>
+          <div class="ml-4">
+            <div class="font-semibold text-gray-900">Mike Chen</div>
+            <div class="text-sm text-gray-600">Teacher</div>
+          </div>
+        </div>
+        <p class="text-gray-700">
+          "As a teacher, I love how easy it is to create and manage courses. The analytics help me understand student progress better."
+        </p>
+      </div>
+
+      <!-- Testimonial 3 -->
+      <div class="bg-gray-50 p-6 rounded-lg">
+        <div class="flex items-center mb-4">
+          <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+            A
+          </div>
+          <div class="ml-4">
+            <div class="font-semibold text-gray-900">Alex Rodriguez</div>
+            <div class="text-sm text-gray-600">Student</div>
+          </div>
+        </div>
+        <p class="text-gray-700">
+          "The mobile app is fantastic! I can learn on the go and never miss a lesson. Highly recommended for busy professionals."
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 gradient-bg text-white">
+  <div class="max-w-4xl mx-auto px-4 text-center">
+    <h2 class="text-4xl font-bold mb-6">Ready to Start Learning?</h2>
+    <p class="text-xl mb-8 opacity-90">
+      Join our community today and unlock your potential with world-class education.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="/register" class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors shadow-lg">
+        <i class="bi bi-person-plus mr-2"></i>
+        Create Account
+      </a>
+      <a href="/login" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition-colors">
+        <i class="bi bi-box-arrow-in-right mr-2"></i>
+        Sign In
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Demo account credentials
+  const demoAccounts = {
+    admin: { email: 'admin@school.com', password: 'example456' },
+    teacher: { email: 'john.teacher@school.com', password: 'example456' },
+    student: { email: 'mike.student@school.com', password: 'example456' }
+  };
+
+  // Fill demo credentials and redirect to login
+  function fillDemoCredentials(role) {
+    const account = demoAccounts[role];
+    if (account) {
+      // Store credentials in sessionStorage for login page
+      sessionStorage.setItem('demo_email', account.email);
+      sessionStorage.setItem('demo_password', account.password);
+      // Redirect to login page
+      window.location.href = '/login';
+    }
+  }
+
+  // Check if user is already logged in
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.SchoolApp.isAuthenticated()) {
+      // User is logged in, redirect to appropriate dashboard
+      const user = window.SchoolApp.getCurrentUser();
+      if (user.role === 'student') {
+        window.location.href = '/student-dashboard';
+      } else {
+        window.location.href = '/';
+      }
+    }
+  });
+
+  // Smooth scrolling for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
+  });
+</script>
+{% endblock %}

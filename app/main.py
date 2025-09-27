@@ -2,7 +2,7 @@
 Flask crud backend
 """
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template, request, redirect, url_for
 from app.routes.users import bp as users_bp
 from app.routes.courses import bp as courses_bp
 from app.routes.files import bp as files_bp
@@ -13,6 +13,7 @@ from app.routes.auth import bp as auth_bp
 
 app = Flask(__name__)
 
+# API Routes
 app.register_blueprint(users_bp, url_prefix="/api/users")
 app.register_blueprint(courses_bp, url_prefix="/api/courses")
 app.register_blueprint(files_bp, url_prefix="/api/files")
@@ -21,10 +22,66 @@ app.register_blueprint(comments_bp, url_prefix="/api/comments")
 app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
+# Frontend Routes
+@app.route('/')
+def landing():
+    """Landing page"""
+    return render_template('landing.html')
+
+@app.route('/dashboard')
+def dashboard():
+    """Main dashboard page for teachers and admins"""
+    return render_template('dashboard.html')
+
+@app.route('/login')
+def login():
+    """Login page"""
+    return render_template('auth/login.html')
+
+@app.route('/register')
+def register():
+    """Registration page"""
+    return render_template('auth/register.html')
+
+@app.route('/courses')
+def courses():
+    """Courses listing page"""
+    return render_template('courses/index.html')
+
+@app.route('/courses/<course_id>')
+def course_detail(course_id):
+    """Course detail page"""
+    return render_template('courses/detail.html', course={'id': course_id})
+
+@app.route('/courses/create')
+def create_course():
+    """Create course page"""
+    return render_template('courses/create.html')
+
+@app.route('/users')
+def users():
+    """Users listing page"""
+    return render_template('users/index.html')
+
+@app.route('/users/<user_id>')
+def user_detail(user_id):
+    """User detail page"""
+    return render_template('users/detail.html', user={'id': user_id})
+
+@app.route('/users/create')
+def create_user():
+    """Create user page"""
+    return render_template('users/create.html')
+
+@app.route('/student-dashboard')
+def student_dashboard():
+    """Student-specific dashboard"""
+    return render_template('student_dashboard.html')
+
 @app.errorhandler(404)
 def not_found(e):
     """ Handle 404 errors """
-    return jsonify({"error": "Not found", "message": str(e)}), 404
+    return render_template('404.html'), 404
 
 @app.errorhandler(Exception)
 def handle_exception(e):

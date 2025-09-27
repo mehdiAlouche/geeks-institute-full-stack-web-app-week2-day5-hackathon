@@ -107,12 +107,12 @@ CREATE INDEX idx_notifications_unread ON notifications(user_id, is_read) WHERE i
 
 -- Insert sample users
 INSERT INTO users (email, password_hash, name, role) VALUES
-('admin@school.com', '$2b$10$exampleHash123', 'System Admin', 'admin'),
-('john.teacher@school.com', '$2b$10$exampleHash456', 'John Smith', 'teacher'),
-('sara.teacher@school.com', '$2b$10$exampleHash789', 'Sara Johnson', 'teacher'),
-('mike.student@school.com', '$2b$10$exampleHash101', 'Mike Brown', 'student'),
-('lisa.student@school.com', '$2b$10$exampleHash102', 'Lisa Wilson', 'student'),
-('tom.student@school.com', '$2b$10$exampleHash103', 'Tom Davis', 'student');
+('admin@school.com', 'example456', 'System Admin', 'admin'),
+('john.teacher@school.com', 'example456', 'John Smith', 'teacher'),
+('sara.teacher@school.com', 'example456', 'Sara Johnson', 'teacher'),
+('mike.student@school.com', 'example456', 'Mike Brown', 'student'),
+('lisa.student@school.com', 'example456', 'Lisa Wilson', 'student'),
+('tom.student@school.com', 'example456', 'Tom Davis', 'student');
 
 -- Insert sample courses
 INSERT INTO courses (teacher_id, title, description, is_published) VALUES

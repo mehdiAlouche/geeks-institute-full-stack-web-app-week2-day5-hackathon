@@ -1,8 +1,32 @@
-### Auth Login Test
+### Auth Registration Test
+POST http://localhost:5001/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "newuser@school.com",
+    "password": "password123",
+    "name": "New User",
+    "role": "student"
+}
+
+###
+
+### Auth Login Test (Note: This will fail with sample data - passwords are not hashed)
 POST http://localhost:5001/api/auth/login
 Content-Type: application/json
 
 {
     "email": "admin@school.com",
-    "password": "$2b$10$exampleHash123"
+    "password": "example456"
+}
+
+###
+
+### Auth Login Test with Valid User (after registration)
+POST http://localhost:5001/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "newuser@school.com",
+    "password": "password123"
 }

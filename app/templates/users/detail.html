@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.name }} - School Management System{% endblock %}
+
+{% block content %}
+<user-profile user-id="{{ user.id }}"></user-profile>
+{% endblock %}
