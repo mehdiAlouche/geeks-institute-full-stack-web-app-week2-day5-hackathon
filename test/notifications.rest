@@ -1,0 +1,16 @@
+### Get all notifications
+GET http://localhost:5001/api/notifications
+
+### Create a new notification
+POST http://localhost:5001/api/notifications
+Content-Type: application/json
+
+{
+  "user_id": "<uuid>",
+  "title": "New Message",
+  "message": "You have a new message.",
+  "is_read": false
+}
+
+### Get a notification by ID
+GET http://localhost:5001/api/notifications/<uuid>

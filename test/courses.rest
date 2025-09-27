@@ -1,0 +1,16 @@
+### Get all courses
+GET http://localhost:5001/api/courses
+
+### Create a new course
+POST http://localhost:5001/api/courses
+Content-Type: application/json
+
+{
+  "teacher_id": "<uuid>",
+  "title": "Python 101",
+  "description": "Intro to Python",
+  "is_published": true
+}
+
+### Get a course by ID
+GET http://localhost:5001/api/courses/<uuid>

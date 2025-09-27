@@ -1,0 +1,17 @@
+### Get all comments
+GET http://localhost:5001/api/comments
+
+### Create a new comment
+POST http://localhost:5001/api/comments
+Content-Type: application/json
+
+{
+  "file_id": "<uuid>",
+  "user_id": "<uuid>",
+  "comment": "Great lecture!",
+  "parent_id": null,
+  "likes": 0
+}
+
+### Get a comment by ID
+GET http://localhost:5001/api/comments/<uuid>

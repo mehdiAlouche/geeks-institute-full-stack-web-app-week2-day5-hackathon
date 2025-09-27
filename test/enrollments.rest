@@ -1,0 +1,14 @@
+### Get all enrollments
+GET http://localhost:5001/api/enrollments
+
+### Create a new enrollment
+POST http://localhost:5001/api/enrollments
+Content-Type: application/json
+
+{
+  "student_id": "<uuid>",
+  "course_id": "<uuid>"
+}
+
+### Get an enrollment by ID
+GET http://localhost:5001/api/enrollments/<uuid>

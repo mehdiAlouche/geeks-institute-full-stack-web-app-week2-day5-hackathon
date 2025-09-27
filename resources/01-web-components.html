@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Components: A React Developer's Guide</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <style>
+      .react-comparison {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 16px;
+        margin: 16px 0;
+        border-radius: 4px;
+      }
+      .web-component-demo {
+        border: 2px dashed #4caf50;
+        padding: 16px;
+        margin: 16px 0;
+        border-radius: 8px;
+        background: #f1f8e9;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto px-6 py-8">
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">
+          Web Components: A React Developer's Guide
+        </h1>
+        <p class="text-lg text-gray-600">
+          Learn Web Components by comparing them to React patterns you already
+          know
+        </p>
+      </div>
+
+      <!-- Introduction -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+          What are Web Components?
+        </h2>
+        <p class="text-lg text-gray-600 mb-4">
+          Web Components are a set of web platform APIs that allow you to create
+          new custom, reusable, encapsulated HTML tags. Think of them as native
+          HTML elements that you can create yourself - similar to React
+          components but built into the browser.
+        </p>
+
+        <div class="react-comparison">
+          <h3 class="text-lg font-semibold text-blue-800 mb-2">
+            React Developer Perspective:
+          </h3>
+          <p class="text-gray-700">
+            If you're familiar with React, Web Components are like creating
+            custom HTML elements that have their own state, props (attributes),
+            and lifecycle methods - but they work in any framework or vanilla
+            JavaScript!
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 1: Basic Component -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+          Step 1: Basic Component (Like a Simple React Component)
+        </h2>
+
+        <div class="react-comparison">
+          <h3 class="text-lg font-semibold text-blue-800 mb-2">
+            React Equivalent:
+          </h3>
+          <pre><code class="language-javascript">function MyButton({ title }) {
+  return &lt;button className="bg-blue-500 text-white px-4 py-2 rounded"&gt;{title}&lt;/button&gt;;
+}</code></pre>
+        </div>
+
+        <h3 class="text-xl font-semibold text-gray-700 mb-3">Web Component:</h3>
+        <pre><code class="language-javascript">class MyButton extends HTMLElement {
+  constructor() {
+    super();
+    // Like React's constructor
+  }
+
+  connectedCallback() {
+    // Like React's componentDidMount
+    this.innerHTML = `&lt;button class="bg-blue-500 text-white px-4 py-2 rounded"&gt;${this.getAttribute('title')}&lt;/button&gt;`;
+  }
+}
+
+customElements.define('my-button', MyButton);</code></pre>
+
+        <div class="web-component-demo">
+          <h4 class="font-semibold text-green-800 mb-2">Live Example:</h4>
+          <my-button title="Click Me!"></my-button>
+        </div>
+      </div>
+
+      <!-- Step 2: Props/Attributes -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+          Step 2: Props (Attributes) - Like React Props
+        </h2>
+
+        <div class="react-comparison">
+          <h3 class="text-lg font-semibold text-blue-800 mb-2">
+            React Equivalent:
+          </h3>
+          <pre><code class="language-javascript">function UserCard({ name, age, email }) {
+  return (
+    &lt;div className="border border-gray-300 p-4 m-2 rounded-lg bg-white"&gt;
+      &lt;h3 className="text-lg font-semibold text-gray-800"&gt;{name}&lt;/h3&gt;
+      &lt;p className="text-gray-600"&gt;Age: {age}&lt;/p&gt;
+      &lt;p className="text-gray-600"&gt;Email: {email}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+        </div>
+
+        <h3 class="text-xl font-semibold text-gray-700 mb-3">Web Component:</h3>
+        <pre><code class="language-javascript">class UserCard extends HTMLElement {
+  static get observedAttributes() {
+    return ['name', 'age', 'email']; // Like React propTypes
+  }
+
+  connectedCallback() {
+    this.render();
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    // Like React's componentDidUpdate
+    this.render();
+  }
+
+  render() {
+    const name = this.getAttribute('name') || 'Unknown';
+    const age = this.getAttribute('age') || '0';
+    const email = this.getAttribute('email') || 'No email';
+    
+    this.innerHTML = `
+      &lt;div class="border border-gray-300 p-4 m-2 rounded-lg bg-white"&gt;
+        &lt;h3 class="text-lg font-semibold text-gray-800"&gt;${name}&lt;/h3&gt;
+        &lt;p class="text-gray-600"&gt;Age: ${age}&lt;/p&gt;
+        &lt;p class="text-gray-600"&gt;Email: ${email}&lt;/p&gt;
+      &lt;/div&gt;
+    `;
+  }
+}
+
+customElements.define('user-card', UserCard);</code></pre>
+
+        <div class="web-component-demo">
+          <h4 class="font-semibold text-green-800 mb-2">Live Examples:</h4>
+          <user-card
+            name="John Doe"
+            age="25"
+            email="john@example.com"
+          ></user-card>
+          <user-card
+            name="Jane Smith"
+            age="30"
+            email="jane@example.com"
+          ></user-card>
+        </div>
+      </div>
+
+      <!-- Step 3: State Management -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+          Step 3: State Management (Like React useState)
+        </h2>
+
+        <div class="react-comparison">
+          <h3 class="text-lg font-semibold text-blue-800 mb-2">
+            React Equivalent:
+          </h3>
+          <pre><code class="language-javascript">function Counter() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    &lt;div className="text-center p-5 bg-gray-100 rounded-lg"&gt;
+      &lt;p className="text-2xl font-bold"&gt;Count: {count}&lt;/p&gt;
+      &lt;button onClick={() =&gt; setCount(count + 1)} className="bg-green-500 text-white px-4 py-2 rounded mr-2"&gt;+&lt;/button&gt;
+      &lt;button onClick={() =&gt; setCount(count - 1)} className="bg-red-500 text-white px-4 py-2 rounded"&gt;-&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+        </div>
+
+        <h3 class="text-xl font-semibold text-gray-700 mb-3">Web Component:</h3>
+        <pre><code class="language-javascript">class Counter extends HTMLElement {
+  constructor() {
+    super();
+    this.count = 0; // Like React state
+  }
+
+  connectedCallback() {
+    this.render();
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    this.addEventListener('click', (e) =&gt; {
+      if (e.target.classList.contains('increment')) {
+        this.count++;
+        this.render(); // Like setState triggering re-render
+      } else if (e.target.classList.contains('decrement')) {
+        this.count--;
+        this.render();
+      }
+    });
+  }
+
+  render() {
+    this.innerHTML = `
+      &lt;div class="text-center p-5 bg-gray-100 rounded-lg"&gt;
+        &lt;p class="text-2xl font-bold"&gt;Count: ${this.count}&lt;/p&gt;
+        &lt;button class="increment bg-green-500 text-white px-4 py-2 rounded mr-2"&gt;+&lt;/button&gt;
+        &lt;button class="decrement bg-red-500 text-white px-4 py-2 rounded"&gt;-&lt;/button&gt;
+      &lt;/div&gt;
+    `;
+  }
+}
+
+customElements.define('my-counter', Counter);</code></pre>
+
+        <div class="web-component-demo">
+          <h4 class="font-semibold text-green-800 mb-2">Live Example:</h4>
+          <my-counter></my-counter>
+        </div>
+      </div>
+
+      <!-- Key Differences Summary -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+          Key Differences: Web Components vs React
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-semibold text-blue-800 mb-3">
+              Web Components
+            </h3>
+            <ul class="space-y-2 text-gray-700">
+              <li>• Native browser APIs</li>
+              <li>• Work in any framework</li>
+              <li>• Use Tailwind/CSS for styling</li>
+              <li>• Custom elements are real HTML elements</li>
+              <li>• Attributes for props</li>
+              <li>• Custom events for communication</li>
+              <li>• No virtual DOM</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-green-800 mb-3">React</h3>
+            <ul class="space-y-2 text-gray-700">
+              <li>• JavaScript library</li>
+              <li>• React ecosystem only</li>
+              <li>• CSS-in-JS or CSS modules</li>
+              <li>• JSX returns virtual DOM</li>
+              <li>• Props as function parameters</li>
+              <li>• Callback functions for communication</li>
+              <li>• Virtual DOM for performance</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- When to Use -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+          When to Use Web Components
+        </h2>
+
+        <div class="space-y-4">
+          <div class="p-4 bg-green-50 border-l-4 border-green-400">
+            <h3 class="font-semibold text-green-800">✅ Good for:</h3>
+            <ul class="text-green-700 mt-2">
+              <li>
+                • Creating reusable UI components across different frameworks
+              </li>
+              <li>• Building design systems that work everywhere</li>
+              <li>• Encapsulating complex functionality</li>
+              <li>
+                • When you want to use familiar CSS frameworks like Tailwind
+              </li>
+            </ul>
+          </div>
+
+          <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400">
+            <h3 class="font-semibold text-yellow-800">
+              ⚠️ Consider React instead for:
+            </h3>
+            <ul class="text-yellow-700 mt-2">
+              <li>• Complex state management</li>
+              <li>• Large applications with many components</li>
+              <li>• When you need React's ecosystem</li>
+              <li>• Server-side rendering</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var html = String.raw;
+      // Step 1: Basic Component
+      class MyButton extends HTMLElement {
+        constructor() {
+          super();
+        }
+
+        connectedCallback() {
+          this.innerHTML = `<button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">${this.getAttribute(
+            "title"
+          )}</button>`;
+        }
+      }
+      customElements.define("my-button", MyButton);
+
+      // Step 2: Props/Attributes
+      class UserCard extends HTMLElement {
+        static get observedAttributes() {
+          return ["name", "age", "email"];
+        }
+
+        connectedCallback() {
+          this.render();
+        }
+
+        attributeChangedCallback(name, oldValue, newValue) {
+          this.render();
+        }
+
+        render() {
+          const name = this.getAttribute("name") || "Unknown";
+          const age = this.getAttribute("age") || "0";
+          const email = this.getAttribute("email") || "No email";
+
+          this.innerHTML = html`
+            <div
+              class="border border-gray-300 p-4 m-2 rounded-lg bg-white shadow-sm"
+            >
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">${name}</h3>
+              <p class="text-gray-600 mb-1">Age: ${age}</p>
+              <p class="text-gray-600">Email: ${email}</p>
+            </div>
+          `;
+        }
+      }
+      customElements.define("user-card", UserCard);
+
+      // Step 3: State Management
+      class Counter extends HTMLElement {
+        constructor() {
+          super();
+          this.count = 0;
+        }
+
+        connectedCallback() {
+          this.render();
+          this.setupEventListeners();
+        }
+
+        setupEventListeners() {
+          this.addEventListener("click", (e) => {
+            if (e.target.classList.contains("increment")) {
+              this.count++;
+              this.render();
+            } else if (e.target.classList.contains("decrement")) {
+              this.count--;
+              this.render();
+            }
+          });
+        }
+
+        render() {
+          this.innerHTML = html`
+            <div class="text-center p-5 bg-gray-100 rounded-lg">
+              <p class="text-2xl font-bold mb-4">Count: ${this.count}</p>
+              <button class="increment bg-green-500 text-white px-4 py-2 rounded mr-2 hover:bg-green-600 transition-colors">+</button>
+              <button class="decrement bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors">-</button>
+            </div>
+          `;
+        }
+      }
+      customElements.define("my-counter", Counter);
+    </script>
+
+    <script>
+      // Initialize syntax highlighting
+      hljs.highlightAll();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+### Get all course files
+GET http://localhost:5001/api/files
+
+### Create a new course file
+POST http://localhost:5001/api/files
+Content-Type: application/json
+
+{
+  "course_id": "<uuid>",
+  "title": "Lecture 1",
+  "file_type": "video",
+  "file_url": "/videos/lecture1.mp4",
+  "file_order": 1
+}
+
+### Get a course file by ID
+GET http://localhost:5001/api/files/<uuid>
