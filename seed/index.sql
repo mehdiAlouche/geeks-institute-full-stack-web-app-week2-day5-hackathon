@@ -115,24 +115,27 @@ INSERT INTO users (email, password_hash, name, role) VALUES
 ('tom.student@school.com', 'example456', 'Tom Davis', 'student');
 
 -- Insert sample courses
-INSERT INTO courses (teacher_id, title, description, is_published) VALUES
+INSERT INTO courses (teacher_id, title, description, is_published, video_url) VALUES
 (
     (SELECT id FROM users WHERE email = 'john.teacher@school.com'),
     'Web Development Fundamentals',
     'Learn HTML, CSS, and JavaScript from scratch',
-    true
+    true,
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 ),
 (
     (SELECT id FROM users WHERE email = 'john.teacher@school.com'),
     'React.js Masterclass',
     'Build modern web applications with React',
-    true
+    true,
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 ),
 (
     (SELECT id FROM users WHERE email = 'sara.teacher@school.com'),
     'Python for Beginners',
     'Start your programming journey with Python',
-    true
+    true,
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 );
 
 -- Insert sample course files

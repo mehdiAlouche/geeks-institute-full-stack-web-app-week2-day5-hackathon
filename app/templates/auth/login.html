@@ -114,7 +114,15 @@
       
       // Small delay to ensure navbar updates before redirect
       setTimeout(() => {
-        window.location.href = '/courses';
+        // Redirect to appropriate page based on user role
+        const user = response.user;
+        if (user.role === 'student') {
+          window.location.href = '/student-dashboard';
+        } else if (user.role === 'teacher' || user.role === 'admin') {
+          window.location.href = '/dashboard';
+        } else {
+          window.location.href = '/courses';
+        }
       }, 100);
       
     } catch (error) {

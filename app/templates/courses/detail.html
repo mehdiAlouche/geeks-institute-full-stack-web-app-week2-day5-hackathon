@@ -5,16 +5,16 @@
 {% block content %}
 <course-detail course-id="{{ course.id }}"></course-detail>
 
-<!-- Comments Section for Students -->
+<!-- Comments Section -->
 <div class="max-w-4xl mx-auto px-6 pb-12" id="comments-section" style="display: none;">
-  <comment-section file-id="placeholder"></comment-section>
+  <comment-section course-id="{{ course.id }}"></comment-section>
 </div>
 
 <script>
-  // Show comments section for students
+  // Show comments section for all authenticated users
   document.addEventListener('DOMContentLoaded', function() {
     const user = window.SchoolApp.getCurrentUser();
-    if (user && user.role === 'student') {
+    if (user) {
       // Wait for course detail to load, then show comments
       setTimeout(() => {
         const commentsSection = document.getElementById('comments-section');

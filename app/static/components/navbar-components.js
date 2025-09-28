@@ -34,16 +34,25 @@ class Navbar extends HTMLElement {
                   <i class="bi bi-book mr-1"></i>Courses
                 </a>
                 ${user?.role === 'student' ? html`
+                  <a href="/student-dashboard" class="text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="bi bi-speedometer2 mr-1"></i>Dashboard
+                  </a>
                   <a href="/my-courses" class="text-gray-700 hover:text-blue-600 transition-colors">
                     <i class="bi bi-collection-play mr-1"></i>My Courses
                   </a>
                 ` : ''}
                 ${user?.role === 'teacher' ? html`
+                  <a href="/dashboard" class="text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="bi bi-speedometer2 mr-1"></i>Dashboard
+                  </a>
                   <a href="/courses/create" class="text-gray-700 hover:text-blue-600 transition-colors">
                     <i class="bi bi-plus-circle mr-1"></i>Create Course
                   </a>
                 ` : ''}
                 ${user?.role === 'admin' ? html`
+                  <a href="/dashboard" class="text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="bi bi-speedometer2 mr-1"></i>Dashboard
+                  </a>
                   <a href="/users" class="text-gray-700 hover:text-blue-600 transition-colors">
                     <i class="bi bi-people mr-1"></i>Users
                   </a>
@@ -83,7 +92,7 @@ class Navbar extends HTMLElement {
                   </button>
                   
                   <!-- Dropdown Menu -->
-                  <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden" id="user-menu">
+                  <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden" id="user-menu" style="z-index: 9999;">
                     <div class="px-4 py-2 border-b border-gray-100">
                       <p class="text-sm font-medium text-gray-900">${user?.name || 'User'}</p>
                       <p class="text-sm text-gray-500">${user?.email || ''}</p>
@@ -136,16 +145,25 @@ class Navbar extends HTMLElement {
                   <i class="bi bi-book mr-2"></i>Courses
                 </a>
                 ${user?.role === 'student' ? html`
+                  <a href="/student-dashboard" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-speedometer2 mr-2"></i>Dashboard
+                  </a>
                   <a href="/my-courses" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
                     <i class="bi bi-collection-play mr-2"></i>My Courses
                   </a>
                 ` : ''}
                 ${user?.role === 'teacher' ? html`
+                  <a href="/dashboard" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-speedometer2 mr-2"></i>Dashboard
+                  </a>
                   <a href="/courses/create" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
                     <i class="bi bi-plus-circle mr-2"></i>Create Course
                   </a>
                 ` : ''}
                 ${user?.role === 'admin' ? html`
+                  <a href="/dashboard" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-speedometer2 mr-2"></i>Dashboard
+                  </a>
                   <a href="/users" class="block px-3 py-2 text-gray-700 hover:text-blue-600">
                     <i class="bi bi-people mr-2"></i>Users
                   </a>
@@ -176,27 +194,34 @@ class Navbar extends HTMLElement {
     // User dropdown toggle
     this.addEventListener('click', (e) => {
       if (e.target.closest('#user-menu-button')) {
+        e.preventDefault();
+        e.stopPropagation();
         const menu = this.querySelector('#user-menu');
-        menu.classList.toggle('hidden');
-      } else if (!e.target.closest('#user-dropdown')) {
-        const menu = this.querySelector('#user-menu');
-        if (menu) menu.classList.add('hidden');
+        if (menu) {
+          menu.classList.toggle('hidden');
+        }
       }
     });
 
     // Mobile menu toggle
     this.addEventListener('click', (e) => {
       if (e.target.closest('#mobile-menu-button')) {
+        e.preventDefault();
+        e.stopPropagation();
         const menu = this.querySelector('#mobile-menu');
-        menu.classList.toggle('hidden');
+        if (menu) {
+          menu.classList.toggle('hidden');
+        }
       }
     });
 
     // Close dropdowns when clicking outside
     document.addEventListener('click', (e) => {
       if (!e.target.closest('navbar-component')) {
-        const menu = this.querySelector('#user-menu');
-        if (menu) menu.classList.add('hidden');
+        const userMenu = this.querySelector('#user-menu');
+        const mobileMenu = this.querySelector('#mobile-menu');
+        if (userMenu) userMenu.classList.add('hidden');
+        if (mobileMenu) mobileMenu.classList.add('hidden');
       }
     });
   }
