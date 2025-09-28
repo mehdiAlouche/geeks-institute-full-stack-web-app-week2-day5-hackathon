@@ -14,3 +14,9 @@ Content-Type: application/json
 
 ### Get a course by ID
 GET http://localhost:5001/api/courses/<uuid>
+
+### Get all courses with pagination and search
+GET http://localhost:5001/api/courses?page=1&per_page=6&search=react
+
+### Get all users with pagination and search
+GET http://localhost:5001/api/users?page=1&per_page=6&search=john

@@ -71,7 +71,7 @@ uv pip install -r requirements.txt
 ### 4. Setup PostgreSQL Database
 Create the database:
 ```sql
-CREATE DATABASE school_db;
+CREATE DATABASE sm_db;
 ```
 Apply schema + seed data:
 ```bash
@@ -100,7 +100,7 @@ POSTGRES_PORT=YOUR_POSTGRES_PORT
 ### 6. Run the Application
 
 ```bash
-python app/main.py
+python -m app.main
 ```
 Visit in browser: [http://localhost:5000](http://localhost:5000)
 

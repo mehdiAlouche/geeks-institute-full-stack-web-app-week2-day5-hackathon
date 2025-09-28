@@ -129,20 +129,12 @@
   document.getElementById('search-input').addEventListener('input', function(e) {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-      const searchTerm = e.target.value.toLowerCase();
-      const courseCards = document.querySelectorAll('course-card');
-      
-      courseCards.forEach(card => {
-        const title = card.getAttribute('title').toLowerCase();
-        const description = card.getAttribute('description').toLowerCase();
-        
-        if (title.includes(searchTerm) || description.includes(searchTerm)) {
-          card.style.display = 'block';
-        } else {
-          card.style.display = 'none';
-        }
-      });
-    }, 300);
+      const searchTerm = e.target.value;
+      const courseList = document.querySelector('course-list');
+      if (courseList && courseList.loadCourses) {
+        courseList.loadCourses(1, searchTerm);
+      }
+    }, 500);
   });
 </script>
 {% endblock %}

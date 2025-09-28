@@ -133,17 +133,29 @@ class CourseList extends HTMLElement {
     this.loadCourses();
   }
 
-  async loadCourses() {
+  async loadCourses(page = 1, search = '') {
     try {
       this.loading = true;
       this.render();
       
-      const data = await window.SchoolApp.apiCall('/courses');
-      this.courses = data.courses || [];
+      const params = new URLSearchParams({
+        page: page.toString(),
+        per_page: '6'
+      });
+      
+      if (search) {
+        params.append('search', search);
+      }
+      
+      const data = await window.SchoolApp.apiCall(`/courses?${params}`);
+      this.courses = data.courses || data; // Handle both paginated and non-paginated responses
+      this.pagination = data.pagination || null;
       this.loading = false;
       this.render();
     } catch (error) {
       this.loading = false;
+      this.courses = [];
+      this.pagination = null;
       this.render();
       console.error('Failed to load courses:', error);
     }
@@ -199,6 +211,34 @@ class CourseList extends HTMLElement {
           ></course-card>
         `).join('')}
       </div>
+      ${this.pagination ? html`
+        <div class="flex items-center justify-between mt-8">
+          <div class="text-sm text-gray-700">
+            Showing ${((this.pagination.page - 1) * this.pagination.per_page) + 1} to 
+            ${Math.min(this.pagination.page * this.pagination.per_page, this.pagination.total)} of 
+            ${this.pagination.total} results
+          </div>
+          <div class="flex items-center space-x-2">
+            <button 
+              class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              ${!this.pagination.has_prev ? 'disabled' : ''}
+              onclick="this.getRootNode().host.loadCourses(${this.pagination.page - 1})"
+            >
+              Previous
+            </button>
+            <span class="px-3 py-2 text-sm font-medium text-gray-700 bg-blue-50 border border-blue-200 rounded-lg">
+              ${this.pagination.page} of ${this.pagination.total_pages}
+            </span>
+            <button 
+              class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              ${!this.pagination.has_next ? 'disabled' : ''}
+              onclick="this.getRootNode().host.loadCourses(${this.pagination.page + 1})"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      ` : ''}
     `;
   }
 }

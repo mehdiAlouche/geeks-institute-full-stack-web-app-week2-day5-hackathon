@@ -91,18 +91,34 @@ class UserCard extends HTMLElement {
   }
 
   async deleteUser(userId) {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-
-    try {
-      await window.SchoolApp.apiCall(`/users/${userId}`, {
-        method: 'DELETE'
-      });
-      
-      window.SchoolApp.showFlash('User deleted successfully', 'success');
-      this.remove();
-    } catch (error) {
-      console.error('Delete user error:', error);
-    }
+    // Create confirmation modal
+    const modal = document.createElement('confirmation-modal');
+    modal.setTitle('Delete User');
+    modal.setMessage('Are you sure you want to delete this user? This action cannot be undone.');
+    modal.setConfirmText('Delete');
+    modal.setCancelText('Cancel');
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('confirm', async () => {
+      try {
+        await window.SchoolApp.apiCall(`/users/${userId}`, {
+          method: 'DELETE'
+        });
+        
+        window.SchoolApp.showFlash('User deleted successfully', 'success');
+        this.remove();
+      } catch (error) {
+        console.error('Delete user error:', error);
+        window.SchoolApp.showFlash('Failed to delete user', 'error');
+      }
+    });
+    
+    modal.addEventListener('close', () => {
+      document.body.removeChild(modal);
+    });
+    
+    modal.open();
   }
 }
 customElements.define("user-card", UserCard);

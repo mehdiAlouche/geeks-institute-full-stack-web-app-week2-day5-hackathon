@@ -8,37 +8,59 @@ bp = Blueprint('courses', __name__)
 @bp.route('/', methods=['GET'])
 @require_auth
 def get_courses():
-    """Get courses - all users can view published courses"""
+    """Get courses with pagination - all users can view published courses"""
     conn = get_db_connection()
     current_user = get_current_user()
     
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 6, type=int)
+    search = request.args.get('search', '', type=str)
+    
     try:
         with conn.cursor() as cur:
-            if current_user['role'] in ['teacher', 'admin']:
-                # Teachers and admins can see all courses (published and draft)
-                cur.execute("""
-                    SELECT c.id, c.teacher_id, c.title, c.description, c.is_published, c.created_at,
-                           u.name as teacher_name,
-                           COUNT(e.id) as enrolled_count
-                    FROM courses c
-                    LEFT JOIN users u ON c.teacher_id = u.id
-                    LEFT JOIN enrollments e ON c.id = e.course_id
-                    GROUP BY c.id, c.teacher_id, c.title, c.description, c.is_published, c.created_at, u.name
-                    ORDER BY c.created_at DESC
-                """)
+            # Base query conditions
+            base_where = "WHERE c.is_published = true" if current_user['role'] == 'student' else ""
+            search_condition = f"AND (c.title ILIKE %s OR c.description ILIKE %s)" if search else ""
+            
+            # Count total courses for pagination
+            count_query = f"""
+                SELECT COUNT(DISTINCT c.id)
+                FROM courses c
+                LEFT JOIN users u ON c.teacher_id = u.id
+                {base_where}
+                {search_condition}
+            """
+            
+            if search:
+                cur.execute(count_query, (f'%{search}%', f'%{search}%'))
             else:
-                # Students can only see published courses
-                cur.execute("""
-                    SELECT c.id, c.teacher_id, c.title, c.description, c.is_published, c.created_at,
-                           u.name as teacher_name,
-                           COUNT(e.id) as enrolled_count
-                    FROM courses c
-                    LEFT JOIN users u ON c.teacher_id = u.id
-                    LEFT JOIN enrollments e ON c.id = e.course_id
-                    WHERE c.is_published = true
-                    GROUP BY c.id, c.teacher_id, c.title, c.description, c.is_published, c.created_at, u.name
-                    ORDER BY c.created_at DESC
-                """)
+                cur.execute(count_query)
+            
+            total_courses = cur.fetchone()[0]
+            total_pages = (total_courses + per_page - 1) // per_page
+            
+            # Get paginated courses
+            offset = (page - 1) * per_page
+            
+            courses_query = f"""
+                SELECT c.id, c.teacher_id, c.title, c.description, c.is_published, c.created_at,
+                       u.name as teacher_name,
+                       COUNT(e.id) as enrolled_count
+                FROM courses c
+                LEFT JOIN users u ON c.teacher_id = u.id
+                LEFT JOIN enrollments e ON c.id = e.course_id
+                {base_where}
+                {search_condition}
+                GROUP BY c.id, c.teacher_id, c.title, c.description, c.is_published, c.created_at, u.name
+                ORDER BY c.created_at DESC
+                LIMIT %s OFFSET %s
+            """
+            
+            if search:
+                cur.execute(courses_query, (f'%{search}%', f'%{search}%', per_page, offset))
+            else:
+                cur.execute(courses_query, (per_page, offset))
             
             courses = cur.fetchall()
             
@@ -56,7 +78,17 @@ def get_courses():
             }
             course_list.append(course_dict)
             
-        return jsonify({'courses': course_list})
+        return jsonify({
+            'courses': course_list,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': total_courses,
+                'total_pages': total_pages,
+                'has_next': page < total_pages,
+                'has_prev': page > 1
+            }
+        })
         
     finally:
         conn.close()

@@ -361,3 +361,106 @@ class EmptyState extends HTMLElement {
   }
 }
 customElements.define("empty-state", EmptyState);
+
+// Confirmation Modal Component
+class ConfirmationModal extends HTMLElement {
+  static get observedAttributes() {
+    return ['title', 'message', 'confirm-text', 'cancel-text'];
+  }
+
+  connectedCallback() {
+    this.render();
+    this.setupEventListeners();
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'title' || name === 'message' || name === 'confirm-text' || name === 'cancel-text') {
+      this.render();
+    }
+  }
+
+  render() {
+    const title = this.getAttribute('title') || 'Confirm Action';
+    const message = this.getAttribute('message') || 'Are you sure you want to proceed?';
+    const confirmText = this.getAttribute('confirm-text') || 'Confirm';
+    const cancelText = this.getAttribute('cancel-text') || 'Cancel';
+
+    this.innerHTML = html`
+      <div class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" id="confirmation-overlay">
+        <div class="flex items-center justify-center min-h-screen p-4">
+          <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="p-6">
+              <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class="bi bi-exclamation-triangle text-red-600 text-xl"></i>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">${title}</h3>
+              <p class="text-gray-600 text-center mb-6">${message}</p>
+              <div class="flex space-x-3">
+                <button class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" id="cancel-btn">
+                  ${cancelText}
+                </button>
+                <button class="flex-1 px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors" id="confirm-btn">
+                  ${confirmText}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  setupEventListeners() {
+    this.addEventListener('click', (e) => {
+      if (e.target.id === 'cancel-btn' || e.target.id === 'confirmation-overlay') {
+        this.close();
+      }
+    });
+
+    this.addEventListener('click', (e) => {
+      if (e.target.id === 'confirm-btn') {
+        this.dispatchEvent(new CustomEvent('confirm'));
+        this.close();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.close();
+      }
+    });
+  }
+
+  open() {
+    const overlay = this.querySelector('#confirmation-overlay');
+    if (overlay) {
+      overlay.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  close() {
+    const overlay = this.querySelector('#confirmation-overlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  }
+
+  setTitle(title) {
+    this.setAttribute('title', title);
+  }
+
+  setMessage(message) {
+    this.setAttribute('message', message);
+  }
+
+  setConfirmText(text) {
+    this.setAttribute('confirm-text', text);
+  }
+
+  setCancelText(text) {
+    this.setAttribute('cancel-text', text);
+  }
+}
+customElements.define("confirmation-modal", ConfirmationModal);
