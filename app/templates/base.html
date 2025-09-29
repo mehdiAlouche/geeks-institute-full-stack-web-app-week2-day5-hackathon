@@ -81,6 +81,9 @@
         // API Base URL
         apiBase: '/api',
         
+        // Ready state
+        ready: false,
+        
         // Show flash messages
         showFlash: function(message, type = 'info') {
           const flashContainer = document.getElementById('flash-messages');
@@ -204,6 +207,9 @@
           window.SchoolApp.refreshNavbar();
         }, 100);
       });
+
+      // Signal that SchoolApp is ready
+      window.SchoolApp.ready = true;
       
       // Initialize app
       document.addEventListener('DOMContentLoaded', function() {

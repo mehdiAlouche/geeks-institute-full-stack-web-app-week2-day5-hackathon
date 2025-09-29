@@ -289,12 +289,19 @@
   // Check if user is already logged in
   document.addEventListener('DOMContentLoaded', function() {
     if (window.SchoolApp.isAuthenticated()) {
-      // User is logged in, redirect to appropriate dashboard
+      // User is logged in, but don't auto-redirect from home page
+      // Let users stay on the landing page if they want to
       const user = window.SchoolApp.getCurrentUser();
-      if (user.role === 'student') {
-        window.location.href = '/student-dashboard';
-      } else {
-        window.location.href = '/';
+      console.log('User is logged in:', user.name, `(${user.role})`);
+      
+      // Only redirect if they came from a login redirect
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('redirect') === 'true') {
+        if (user.role === 'student') {
+          window.location.href = '/student-dashboard';
+        } else {
+          window.location.href = '/dashboard';
+        }
       }
     }
   });

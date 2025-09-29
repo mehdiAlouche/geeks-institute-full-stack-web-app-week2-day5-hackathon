@@ -21,13 +21,34 @@ def create_access_token(identity):
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 def verify_token(token):
-    """Verify JWT token and return user ID"""
+    """Verify JWT token and return user information"""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload.get('sub')
+        user_id = payload.get('sub')
+        if not user_id:
+            return None
+        
+        # Get user information from database
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute('SELECT id, email, name, role FROM users WHERE id = %s', (user_id,))
+                user = cur.fetchone()
+                if user:
+                    return {
+                        'id': str(user[0]),
+                        'email': user[1],
+                        'name': user[2],
+                        'role': user[3]
+                    }
+                return None
+        finally:
+            conn.close()
     except jwt.ExpiredSignatureError:
         return None
     except jwt.InvalidTokenError:
+        return None
+    except Exception:
         return None
 
 @bp.route('/register', methods=['POST'])

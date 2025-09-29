@@ -130,13 +130,37 @@ class CourseList extends HTMLElement {
 
   connectedCallback() {
     this.render();
-    this.loadCourses();
+    // Wait for SchoolApp to be available
+    this.waitForSchoolApp().then(() => {
+      this.loadCourses();
+    });
+  }
+
+  async waitForSchoolApp() {
+    // Wait for SchoolApp to be available and ready
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
+    
+    while (attempts < maxAttempts) {
+      if (window.SchoolApp && window.SchoolApp.apiCall && window.SchoolApp.ready) {
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    throw new Error('SchoolApp not available after waiting');
   }
 
   async loadCourses(page = 1, search = '') {
     try {
       this.loading = true;
       this.render();
+      
+      // Check if SchoolApp is available
+      if (!window.SchoolApp || !window.SchoolApp.apiCall) {
+        throw new Error('SchoolApp is not available');
+      }
       
       const params = new URLSearchParams({
         page: page.toString(),
@@ -158,6 +182,20 @@ class CourseList extends HTMLElement {
       this.pagination = null;
       this.render();
       console.error('Failed to load courses:', error);
+      
+      // Show user-friendly error message
+      this.innerHTML = `
+        <div class="text-center py-8">
+          <div class="text-red-600 mb-4">
+            <i class="bi bi-exclamation-triangle text-4xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">Failed to load courses</h3>
+          <p class="text-gray-600 mb-4">Please refresh the page and try again.</p>
+          <button onclick="location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            Refresh Page
+          </button>
+        </div>
+      `;
     }
   }
 
@@ -259,11 +297,43 @@ class CourseDetail extends HTMLElement {
 
   connectedCallback() {
     this.render();
-    this.loadCourse();
+    // Wait for SchoolApp to be available
+    this.waitForSchoolApp().then(() => {
+      this.loadCourse();
+    }).catch(error => {
+      console.error('SchoolApp not available:', error);
+      this.loading = false;
+      this.render();
+    });
   }
 
   attributeChangedCallback() {
-    this.loadCourse();
+    // Wait for SchoolApp to be available before loading course
+    if (window.SchoolApp && window.SchoolApp.ready) {
+      this.loadCourse();
+    } else {
+      this.waitForSchoolApp().then(() => {
+        this.loadCourse();
+      }).catch(error => {
+        console.error('SchoolApp not available:', error);
+      });
+    }
+  }
+
+  async waitForSchoolApp() {
+    // Wait for SchoolApp to be available and ready
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
+    
+    while (attempts < maxAttempts) {
+      if (window.SchoolApp && window.SchoolApp.apiCall && window.SchoolApp.ready) {
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    throw new Error('SchoolApp not available after waiting');
   }
 
   async loadCourse() {
@@ -343,25 +413,35 @@ class CourseDetail extends HTMLElement {
           </div>
           
           <div class="flex space-x-3">
-            <app-button variant="primary">
+            <button variant="primary">
               <i class="bi bi-play-circle mr-2"></i>
               Start Learning
-            </app-button>
-            <app-button variant="outline">
+            </button>
+            <button variant="outline">
               <i class="bi bi-bookmark mr-2"></i>
               Save for Later
-            </app-button>
+            </button>
           </div>
         </div>
 
+        <!-- Course Video -->
+        ${this.course.video_url ? html`
+          <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Course Video</h2>
+            <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+              ${this.renderVideo(this.course.video_url)}
+            </div>
+          </div>
+        ` : ''}
+
         <!-- Course Files -->
         <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">Course Content</h2>
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Course Materials</h2>
           
           ${this.files.length === 0 ? html`
             <empty-state 
-              title="No content available"
-              description="This course doesn't have any files or content yet."
+              title="No materials available"
+              description="This course doesn't have any downloadable materials yet."
               icon="bi-file-earmark"
             ></empty-state>
           ` : html`
@@ -373,13 +453,17 @@ class CourseDetail extends HTMLElement {
                   </div>
                   <div class="flex-1">
                     <h3 class="font-medium text-gray-800">${file.title}</h3>
-                    <p class="text-sm text-gray-500">${this.getFileTypeLabel(file.file_type)} • ${file.file_order}</p>
+                    <p class="text-sm text-gray-500">${this.getFileTypeLabel(file.file_type)}</p>
                   </div>
                   <div class="flex-shrink-0">
-                    <app-button variant="ghost" size="sm">
-                      <i class="bi bi-play-circle mr-1"></i>
-                      View
-                    </app-button>
+                    <a 
+                      href="${file.file_url}" 
+                      target="_blank" 
+                      class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                    >
+                      <i class="bi bi-download mr-1"></i>
+                      Download
+                    </a>
                   </div>
                 </div>
               `).join('')}
@@ -403,9 +487,72 @@ class CourseDetail extends HTMLElement {
     const labels = {
       video: 'Video',
       pdf: 'PDF Document',
-      document: 'Document'
+      document: 'Document',
+      archive: 'Archive'
     };
     return labels[fileType] || 'File';
+  }
+
+  renderVideo(videoUrl) {
+    if (!videoUrl) return '';
+    
+    // YouTube URL handling
+    if (videoUrl.includes('youtube.com/watch') || videoUrl.includes('youtu.be/')) {
+      let videoId = '';
+      if (videoUrl.includes('youtube.com/watch')) {
+        videoId = videoUrl.split('v=')[1]?.split('&')[0];
+      } else if (videoUrl.includes('youtu.be/')) {
+        videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0];
+      }
+      
+      if (videoId) {
+        return html`
+          <iframe 
+            src="https://www.youtube.com/embed/${videoId}" 
+            title="Course Video"
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen
+            class="w-full h-full"
+          ></iframe>
+        `;
+      }
+    }
+    
+    // Vimeo URL handling
+    if (videoUrl.includes('vimeo.com/')) {
+      const videoId = videoUrl.split('vimeo.com/')[1]?.split('?')[0];
+      if (videoId) {
+        return html`
+          <iframe 
+            src="https://player.vimeo.com/video/${videoId}" 
+            title="Course Video"
+            frameborder="0" 
+            allow="autoplay; fullscreen; picture-in-picture" 
+            allowfullscreen
+            class="w-full h-full"
+          ></iframe>
+        `;
+      }
+    }
+    
+    // Fallback for other video URLs
+    return html`
+      <div class="flex items-center justify-center h-full">
+        <div class="text-center">
+          <i class="bi bi-play-circle text-6xl text-gray-400 mb-4"></i>
+          <p class="text-gray-600 mb-4">Video not supported for embedding</p>
+          <a 
+            href="${videoUrl}" 
+            target="_blank" 
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <i class="bi bi-play-circle mr-2"></i>
+            Watch Video
+          </a>
+        </div>
+      </div>
+    `;
   }
 }
 customElements.define("course-detail", CourseDetail);
@@ -416,22 +563,151 @@ class CourseForm extends HTMLElement {
     super();
     this.course = null;
     this.loading = false;
+    this.teachers = [];
+    this.isEdit = false;
+    this.courseId = null;
   }
 
   connectedCallback() {
     this.render();
     this.setupEventListeners();
+    // Wait for SchoolApp to be available
+    this.waitForSchoolApp().then(() => {
+      this.loadTeachers();
+      this.checkEditMode();
+    });
+  }
+
+  async waitForSchoolApp() {
+    // Wait for SchoolApp to be available and ready
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
+    
+    while (attempts < maxAttempts) {
+      if (window.SchoolApp && window.SchoolApp.apiCall && window.SchoolApp.ready) {
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    throw new Error('SchoolApp not available after waiting');
+  }
+
+  checkEditMode() {
+    // Check if we're in edit mode by looking at the URL or page context
+    const urlParams = new URLSearchParams(window.location.search);
+    const pathParts = window.location.pathname.split('/');
+    
+    if (pathParts.includes('edit')) {
+      this.isEdit = true;
+      this.courseId = pathParts[pathParts.indexOf('courses') + 1];
+      this.loadCourse();
+    }
+  }
+
+  async loadCourse() {
+    if (!this.courseId) return;
+
+    try {
+      this.loading = true;
+      this.render();
+
+      const course = await window.SchoolApp.apiCall(`/courses/${this.courseId}`);
+      this.course = course;
+      this.loading = false;
+      this.render();
+      this.populateForm();
+    } catch (error) {
+      this.loading = false;
+      this.render();
+      console.error('Failed to load course:', error);
+      window.SchoolApp.showFlash('Failed to load course', 'error');
+    }
+  }
+
+  populateForm() {
+    if (!this.course) return;
+
+    const titleInput = this.querySelector('#title');
+    const descriptionInput = this.querySelector('#description');
+    const teacherSelect = this.querySelector('#teacher_id');
+    const publishedCheckbox = this.querySelector('#is_published');
+
+    if (titleInput) titleInput.value = this.course.title || '';
+    if (descriptionInput) descriptionInput.value = this.course.description || '';
+    if (teacherSelect) teacherSelect.value = this.course.teacher_id || '';
+    if (publishedCheckbox) publishedCheckbox.checked = this.course.is_published || false;
+  }
+
+  async loadTeachers() {
+    try {
+      // Check if SchoolApp is available
+      if (!window.SchoolApp || !window.SchoolApp.getCurrentUser || !window.SchoolApp.apiCall) {
+        throw new Error('SchoolApp is not available');
+      }
+
+      const user = window.SchoolApp.getCurrentUser();
+      
+      if (user?.role === 'teacher') {
+        // Teachers can only create courses for themselves
+        this.teachers = [user];
+        this.populateTeacherSelect();
+      } else if (user?.role === 'admin') {
+        // Admins can create courses for any teacher
+        const data = await window.SchoolApp.apiCall('/users?role=teacher');
+        this.teachers = data.users || [];
+        this.populateTeacherSelect();
+      }
+    } catch (error) {
+      console.error('Failed to load teachers:', error);
+      // Show error in the teacher select
+      const teacherSelect = this.querySelector('#teacher_id');
+      if (teacherSelect) {
+        teacherSelect.innerHTML = '<option value="">Error loading teachers</option>';
+        teacherSelect.disabled = true;
+      }
+    }
+  }
+
+  populateTeacherSelect() {
+    const teacherSelect = this.querySelector('#teacher_id');
+    if (!teacherSelect) return;
+
+    // Clear existing options
+    teacherSelect.innerHTML = '<option value="">Select a teacher</option>';
+    
+    // Add teacher options
+    this.teachers.forEach(teacher => {
+      const option = document.createElement('option');
+      option.value = teacher.id;
+      option.textContent = teacher.name;
+      teacherSelect.appendChild(option);
+    });
+
+    // Auto-select current user if they're a teacher
+    const user = window.SchoolApp?.getCurrentUser();
+    if (user?.role === 'teacher') {
+      teacherSelect.value = user.id;
+      teacherSelect.disabled = true; // Teachers can't change the teacher
+    }
   }
 
   render() {
+    const user = window.SchoolApp?.getCurrentUser();
+    const isTeacher = user?.role === 'teacher';
+    const isAdmin = user?.role === 'admin';
+
     this.innerHTML = html`
       <form id="course-form" class="space-y-6">
         <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">Course Information</h2>
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">
+            ${this.isEdit ? 'Edit Course Information' : 'Course Information'}
+          </h2>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Course Title</label>
+              <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Course Title *</label>
               <input 
                 type="text" 
                 id="title" 
@@ -443,15 +719,21 @@ class CourseForm extends HTMLElement {
             </div>
             
             <div>
-              <label for="teacher_id" class="block text-sm font-medium text-gray-700 mb-2">Teacher</label>
+              <label for="teacher_id" class="block text-sm font-medium text-gray-700 mb-2">
+                Teacher ${isTeacher ? '(You)' : '*'}
+              </label>
               <select 
                 id="teacher_id" 
                 name="teacher_id" 
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                ${isTeacher ? 'disabled' : ''}
               >
                 <option value="">Select a teacher</option>
               </select>
+              ${isTeacher ? html`
+                <p class="text-sm text-gray-500 mt-1">You are creating this course for yourself</p>
+              ` : ''}
             </div>
           </div>
           
@@ -474,19 +756,64 @@ class CourseForm extends HTMLElement {
                 name="is_published"
                 class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               >
-              <span class="ml-2 text-sm text-gray-700">Publish this course</span>
+              <span class="ml-2 text-sm text-gray-700">Publish this course immediately</span>
             </label>
+            <p class="text-sm text-gray-500 mt-1">Unpublished courses are saved as drafts and can be published later</p>
+          </div>
+        </div>
+        
+        <!-- Course Content Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Course Content</h2>
+          
+          <!-- Video URL Section -->
+          <div class="mb-6">
+            <label for="video_url" class="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
+            <input 
+              type="url" 
+              id="video_url" 
+              name="video_url" 
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+            >
+            <p class="text-sm text-gray-500 mt-1">Add a YouTube or Vimeo URL for your course video</p>
+          </div>
+          
+          <!-- File Upload Section -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Course Files</label>
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+              <input 
+                type="file" 
+                id="course_files" 
+                name="course_files" 
+                multiple 
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip"
+                class="hidden"
+              >
+              <div class="space-y-2">
+                <i class="bi bi-cloud-upload text-4xl text-gray-400"></i>
+                <div class="text-sm text-gray-600">
+                  <label for="course_files" class="cursor-pointer text-blue-600 hover:text-blue-500">
+                    Click to upload files
+                  </label>
+                  <span class="text-gray-500"> or drag and drop</span>
+                </div>
+                <p class="text-xs text-gray-500">PDF, DOC, PPT, TXT, ZIP files up to 10MB each</p>
+              </div>
+            </div>
+            <div id="file-list" class="mt-4 space-y-2"></div>
           </div>
         </div>
         
         <div class="flex justify-end space-x-3">
-          <app-button variant="outline" type="button" onclick="history.back()">
+          <button variant="outline" type="button" onclick="history.back()">
             Cancel
-          </app-button>
-          <app-button variant="primary" type="submit" id="submit-btn">
+          </button>
+          <button variant="primary" type="submit" id="submit-btn">
             <i class="bi bi-save mr-2"></i>
-            Save Course
-          </app-button>
+            ${this.isEdit ? 'Update Course' : 'Create Course'}
+          </button>
         </div>
       </form>
     `;
@@ -495,6 +822,38 @@ class CourseForm extends HTMLElement {
   setupEventListeners() {
     const form = this.querySelector('#course-form');
     const submitBtn = this.querySelector('#submit-btn');
+    const fileInput = this.querySelector('#course_files');
+    const fileList = this.querySelector('#file-list');
+    
+    // Store selected files
+    this.selectedFiles = [];
+
+    // File input change handler
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        this.handleFileSelection(e.target.files);
+      });
+    }
+
+    // Drag and drop handlers
+    const dropZone = this.querySelector('.border-dashed');
+    if (dropZone) {
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-blue-400', 'bg-blue-50');
+      });
+
+      dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+        this.handleFileSelection(e.dataTransfer.files);
+      });
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -504,27 +863,190 @@ class CourseForm extends HTMLElement {
       
       try {
         const formData = new FormData(form);
+        const user = window.SchoolApp?.getCurrentUser();
+        
+        // Prepare course data
         const courseData = {
           title: formData.get('title'),
           description: formData.get('description'),
-          teacher_id: formData.get('teacher_id'),
+          video_url: formData.get('video_url'),
           is_published: formData.has('is_published')
         };
 
-        const response = await window.SchoolApp.apiCall('/courses', {
-          method: 'POST',
-          body: JSON.stringify(courseData)
-        });
+        // Handle teacher selection based on user role
+        if (user?.role === 'teacher') {
+          // Teachers can only create courses for themselves
+          courseData.teacher_id = user.id;
+        } else if (user?.role === 'admin') {
+          // Admins can create courses for any teacher
+          const teacherId = formData.get('teacher_id');
+          if (!teacherId) {
+            throw new Error('Please select a teacher');
+          }
+          courseData.teacher_id = teacherId;
+        } else {
+          throw new Error('You do not have permission to create courses');
+        }
 
-        window.SchoolApp.showFlash('Course created successfully!', 'success');
-        window.location.href = `/courses/${response.id}`;
+        // Validate required fields
+        if (!courseData.title.trim()) {
+          throw new Error('Course title is required');
+        }
+
+        let response;
+        if (this.isEdit) {
+          response = await window.SchoolApp.apiCall(`/courses/${this.courseId}`, {
+            method: 'PUT',
+            body: JSON.stringify(courseData)
+          });
+          window.SchoolApp.showFlash('Course updated successfully!', 'success');
+        } else {
+          response = await window.SchoolApp.apiCall('/courses', {
+            method: 'POST',
+            body: JSON.stringify(courseData)
+          });
+          window.SchoolApp.showFlash('Course created successfully!', 'success');
+        }
+        
+        // Handle file uploads if any files are selected
+        if (this.selectedFiles && this.selectedFiles.length > 0) {
+          await this.uploadFiles(response.id);
+        }
+        
+        // Redirect based on publication status
+        if (courseData.is_published) {
+          window.location.href = `/courses/${response.id}`;
+        } else {
+          window.location.href = `/courses/${response.id}?draft=true`;
+        }
       } catch (error) {
-        console.error('Course creation error:', error);
+        console.error('Course operation error:', error);
+        window.SchoolApp.showFlash(error.message || `Failed to ${this.isEdit ? 'update' : 'create'} course`, 'error');
       } finally {
         this.loading = false;
         submitBtn.removeAttribute('loading');
       }
     });
+  }
+
+  handleFileSelection(files) {
+    const fileList = this.querySelector('#file-list');
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.txt', '.zip'];
+    
+    Array.from(files).forEach(file => {
+      // Check file size
+      if (file.size > maxSize) {
+        window.SchoolApp.showFlash(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+        return;
+      }
+      
+      // Check file type
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+      if (!allowedTypes.includes(fileExtension)) {
+        window.SchoolApp.showFlash(`File type ${fileExtension} is not allowed.`, 'error');
+        return;
+      }
+      
+      // Add to selected files
+      this.selectedFiles.push(file);
+    });
+    
+    this.renderFileList();
+  }
+
+  renderFileList() {
+    const fileList = this.querySelector('#file-list');
+    if (!fileList) return;
+    
+    if (this.selectedFiles.length === 0) {
+      fileList.innerHTML = '';
+      return;
+    }
+    
+    fileList.innerHTML = this.selectedFiles.map((file, index) => html`
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div class="flex items-center space-x-3">
+          <i class="bi ${this.getFileIcon(file.name)} text-blue-600"></i>
+          <div>
+            <p class="text-sm font-medium text-gray-800">${file.name}</p>
+            <p class="text-xs text-gray-500">${this.formatFileSize(file.size)}</p>
+          </div>
+        </div>
+        <button 
+          type="button" 
+          class="text-red-600 hover:text-red-800"
+          onclick="this.getRootNode().host.removeFile(${index})"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    `).join('');
+  }
+
+  removeFile(index) {
+    this.selectedFiles.splice(index, 1);
+    this.renderFileList();
+  }
+
+  getFileIcon(fileName) {
+    const extension = fileName.split('.').pop().toLowerCase();
+    const icons = {
+      pdf: 'bi-file-earmark-pdf',
+      doc: 'bi-file-earmark-word',
+      docx: 'bi-file-earmark-word',
+      ppt: 'bi-file-earmark-ppt',
+      pptx: 'bi-file-earmark-ppt',
+      txt: 'bi-file-earmark-text',
+      zip: 'bi-file-earmark-zip'
+    };
+    return icons[extension] || 'bi-file-earmark';
+  }
+
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  async uploadFiles(courseId) {
+    try {
+      for (let i = 0; i < this.selectedFiles.length; i++) {
+        const file = this.selectedFiles[i];
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('course_id', courseId);
+        formData.append('title', file.name);
+        formData.append('file_type', this.getFileType(file.name));
+        formData.append('file_order', i + 1);
+
+        await window.SchoolApp.apiCall('/files/upload', {
+          method: 'POST',
+          body: formData
+        });
+      }
+      
+      window.SchoolApp.showFlash('Files uploaded successfully!', 'success');
+    } catch (error) {
+      console.error('File upload error:', error);
+      window.SchoolApp.showFlash('Some files failed to upload', 'warning');
+    }
+  }
+
+  getFileType(fileName) {
+    const extension = fileName.split('.').pop().toLowerCase();
+    const typeMap = {
+      pdf: 'pdf',
+      doc: 'document',
+      docx: 'document',
+      ppt: 'document',
+      pptx: 'document',
+      txt: 'document',
+      zip: 'archive'
+    };
+    return typeMap[extension] || 'document';
   }
 }
 customElements.define("course-form", CourseForm);

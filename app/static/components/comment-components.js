@@ -139,13 +139,27 @@ class CommentItem extends HTMLElement {
     if (!replyText) return;
 
     try {
+      const replyData = {
+        parent_id: commentId,
+        comment: replyText
+      };
+      
+      // Get file-id or course-id from the comment section
+      const commentSection = this.closest('comment-section');
+      if (commentSection) {
+        const fileId = commentSection.getAttribute('file-id');
+        const courseId = commentSection.getAttribute('course-id');
+        
+        if (fileId) {
+          replyData.file_id = fileId;
+        } else if (courseId) {
+          replyData.course_id = courseId;
+        }
+      }
+
       await window.SchoolApp.apiCall('/comments', {
         method: 'POST',
-        body: JSON.stringify({
-          file_id: this.getAttribute('file-id'),
-          parent_id: commentId,
-          comment: replyText
-        })
+        body: JSON.stringify(replyData)
       });
 
       window.SchoolApp.showFlash('Reply posted successfully!', 'success');
@@ -153,13 +167,13 @@ class CommentItem extends HTMLElement {
       this.toggleReplyForm();
       
       // Refresh comments
-      const commentSection = this.closest('comment-section');
       if (commentSection) {
         commentSection.loadComments();
       }
       
     } catch (error) {
       console.error('Reply submission error:', error);
+      window.SchoolApp.showFlash('Failed to post reply', 'error');
     }
   }
 
@@ -174,7 +188,7 @@ customElements.define("comment-item", CommentItem);
 // Comment Section Component
 class CommentSection extends HTMLElement {
   static get observedAttributes() {
-    return ['file-id'];
+    return ['file-id', 'course-id'];
   }
 
   constructor() {
@@ -185,22 +199,63 @@ class CommentSection extends HTMLElement {
 
   connectedCallback() {
     this.render();
-    this.loadComments();
+    // Wait for SchoolApp to be available
+    this.waitForSchoolApp().then(() => {
+      this.loadComments();
+    }).catch(error => {
+      console.error('SchoolApp not available:', error);
+      this.loading = false;
+      this.render();
+    });
   }
 
   attributeChangedCallback() {
-    this.loadComments();
+    // Wait for SchoolApp to be available before loading comments
+    if (window.SchoolApp && window.SchoolApp.ready) {
+      this.loadComments();
+    } else {
+      this.waitForSchoolApp().then(() => {
+        this.loadComments();
+      }).catch(error => {
+        console.error('SchoolApp not available:', error);
+      });
+    }
+  }
+
+  async waitForSchoolApp() {
+    // Wait for SchoolApp to be available and ready
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
+    
+    while (attempts < maxAttempts) {
+      if (window.SchoolApp && window.SchoolApp.apiCall && window.SchoolApp.ready) {
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    throw new Error('SchoolApp not available after waiting');
   }
 
   async loadComments() {
     const fileId = this.getAttribute('file-id');
-    if (!fileId) return;
+    const courseId = this.getAttribute('course-id');
+    
+    if (!fileId && !courseId) return;
 
     try {
       this.loading = true;
       this.render();
 
-      const response = await window.SchoolApp.apiCall(`/comments?file_id=${fileId}`);
+      let url = '/comments?';
+      if (fileId) {
+        url += `file_id=${fileId}`;
+      } else if (courseId) {
+        url += `course_id=${courseId}`;
+      }
+
+      const response = await window.SchoolApp.apiCall(url);
       this.comments = response.comments || [];
       this.loading = false;
       this.render();
@@ -237,7 +292,7 @@ class CommentSection extends HTMLElement {
 
     this.innerHTML = html`
       <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Comments (${this.comments.length})</h3>
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Course Discussion (${this.comments.length})</h3>
         
         <!-- Add Comment Form -->
         <div class="mb-6">
@@ -260,7 +315,7 @@ class CommentSection extends HTMLElement {
           ${this.comments.length === 0 ? html`
             <empty-state 
               title="No comments yet"
-              description="Be the first to comment on this lesson!"
+              description="Be the first to start a discussion about this course!"
               icon="bi-chat"
             ></empty-state>
           ` : this.comments.map(comment => html`
@@ -272,7 +327,6 @@ class CommentSection extends HTMLElement {
               likes="${comment.likes}"
               created-at="${comment.created_at}"
               is-liked="${comment.is_liked || false}"
-              file-id="${this.getAttribute('file-id')}"
             ></comment-item>
           `).join('')}
         </div>
@@ -291,6 +345,7 @@ class CommentSection extends HTMLElement {
 
   async submitComment() {
     const fileId = this.getAttribute('file-id');
+    const courseId = this.getAttribute('course-id');
     const commentText = this.querySelector('#new-comment').value.trim();
     
     if (!commentText) {
@@ -298,13 +353,25 @@ class CommentSection extends HTMLElement {
       return;
     }
 
+    if (!fileId && !courseId) {
+      window.SchoolApp.showFlash('No file or course ID specified', 'error');
+      return;
+    }
+
     try {
+      const commentData = {
+        comment: commentText
+      };
+      
+      if (fileId) {
+        commentData.file_id = fileId;
+      } else if (courseId) {
+        commentData.course_id = courseId;
+      }
+
       await window.SchoolApp.apiCall('/comments', {
         method: 'POST',
-        body: JSON.stringify({
-          file_id: fileId,
-          comment: commentText
-        })
+        body: JSON.stringify(commentData)
       });
 
       window.SchoolApp.showFlash('Comment posted successfully!', 'success');
@@ -313,6 +380,7 @@ class CommentSection extends HTMLElement {
       
     } catch (error) {
       console.error('Comment submission error:', error);
+      window.SchoolApp.showFlash('Failed to post comment', 'error');
     }
   }
 }

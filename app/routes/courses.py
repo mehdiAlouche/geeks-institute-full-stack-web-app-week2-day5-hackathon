@@ -44,7 +44,7 @@ def get_courses():
             offset = (page - 1) * per_page
             
             courses_query = f"""
-                SELECT c.id, c.teacher_id, c.title, c.description, c.is_published, c.created_at,
+                SELECT c.id, c.teacher_id, c.title, c.description, c.video_url, c.is_published, c.created_at,
                        u.name as teacher_name,
                        COUNT(e.id) as enrolled_count
                 FROM courses c
@@ -52,7 +52,7 @@ def get_courses():
                 LEFT JOIN enrollments e ON c.id = e.course_id
                 {base_where}
                 {search_condition}
-                GROUP BY c.id, c.teacher_id, c.title, c.description, c.is_published, c.created_at, u.name
+                GROUP BY c.id, c.teacher_id, c.title, c.description, c.video_url, c.is_published, c.created_at, u.name
                 ORDER BY c.created_at DESC
                 LIMIT %s OFFSET %s
             """
@@ -71,10 +71,11 @@ def get_courses():
                 'teacher_id': str(course[1]),
                 'title': course[2],
                 'description': course[3],
-                'is_published': course[4],
-                'created_at': course[5].isoformat() if course[5] else None,
-                'teacher_name': course[6],
-                'enrolled_count': course[7] or 0
+                'video_url': course[4],
+                'is_published': course[5],
+                'created_at': course[6].isoformat() if course[6] else None,
+                'teacher_name': course[7],
+                'enrolled_count': course[8] or 0
             }
             course_list.append(course_dict)
             
@@ -103,14 +104,14 @@ def get_course(course_id):
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT c.id, c.teacher_id, c.title, c.description, c.is_published, c.created_at,
+                SELECT c.id, c.teacher_id, c.title, c.description, c.video_url, c.is_published, c.created_at,
                        u.name as teacher_name,
                        COUNT(e.id) as enrolled_count
                 FROM courses c
                 LEFT JOIN users u ON c.teacher_id = u.id
                 LEFT JOIN enrollments e ON c.id = e.course_id
                 WHERE c.id = %s
-                GROUP BY c.id, c.teacher_id, c.title, c.description, c.is_published, c.created_at, u.name
+                GROUP BY c.id, c.teacher_id, c.title, c.description, c.video_url, c.is_published, c.created_at, u.name
             """, (str(course_id),))
             
             course = cur.fetchone()
@@ -119,7 +120,7 @@ def get_course(course_id):
             return jsonify({'error': 'Course not found'}), 404
             
         # Check if user can view this course
-        is_published = course[4]
+        is_published = course[5]
         teacher_id = str(course[1])
         
         # Allow if published OR if user is teacher/admin
@@ -135,10 +136,11 @@ def get_course(course_id):
             'teacher_id': str(course[1]),
             'title': course[2],
             'description': course[3],
-            'is_published': course[4],
-            'created_at': course[5].isoformat() if course[5] else None,
-            'teacher_name': course[6],
-            'enrolled_count': course[7] or 0
+            'video_url': course[4],
+            'is_published': course[5],
+            'created_at': course[6].isoformat() if course[6] else None,
+            'teacher_name': course[7],
+            'enrolled_count': course[8] or 0
         }
         
         return jsonify(course_dict)
@@ -165,9 +167,9 @@ def create_course():
                 return jsonify({'error': 'teacher_id is required for admin'}), 400
                 
             cur.execute("""
-                INSERT INTO courses (teacher_id, title, description, is_published)
-                VALUES (%s, %s, %s, %s) RETURNING id
-            """, (teacher_id, data['title'], data['description'], data.get('is_published', False)))
+                INSERT INTO courses (teacher_id, title, description, video_url, is_published)
+                VALUES (%s, %s, %s, %s, %s) RETURNING id
+            """, (teacher_id, data['title'], data['description'], data.get('video_url'), data.get('is_published', False)))
             
             course_id = cur.fetchone()[0]
             conn.commit()
@@ -206,9 +208,9 @@ def update_course(course_id):
                 teacher_id = current_user['id']
                 
             cur.execute("""
-                UPDATE courses SET teacher_id=%s, title=%s, description=%s, is_published=%s
+                UPDATE courses SET teacher_id=%s, title=%s, description=%s, video_url=%s, is_published=%s
                 WHERE id=%s RETURNING id
-            """, (teacher_id, data['title'], data['description'], data.get('is_published', False), str(course_id)))
+            """, (teacher_id, data['title'], data['description'], data.get('video_url'), data.get('is_published', False), str(course_id)))
             
             updated = cur.fetchone()
             conn.commit()
