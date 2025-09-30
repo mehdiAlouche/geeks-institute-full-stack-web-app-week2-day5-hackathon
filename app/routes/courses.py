@@ -17,11 +17,48 @@ def get_courses():
     per_page = request.args.get('per_page', 6, type=int)
     search = request.args.get('search', '', type=str)
     
+    # Filter parameters
+    category = request.args.get('category', '', type=str)
+    level = request.args.get('level', '', type=str)
+    status = request.args.get('status', '', type=str)
+    sort = request.args.get('sort', 'newest', type=str)
+    
     try:
         with conn.cursor() as cur:
             # Base query conditions
             base_where = "WHERE c.is_published = true" if current_user['role'] == 'student' else ""
             search_condition = f"AND (c.title ILIKE %s OR c.description ILIKE %s)" if search else ""
+            
+            # Build filter conditions
+            filter_conditions = []
+            filter_params = []
+            
+            if status:
+                if status == 'published':
+                    filter_conditions.append("c.is_published = true")
+                elif status == 'draft':
+                    filter_conditions.append("c.is_published = false")
+            
+            if category:
+                filter_conditions.append("c.category = %s")
+                filter_params.append(category)
+            
+            if level:
+                filter_conditions.append("c.level = %s")
+                filter_params.append(level)
+            
+            filter_where = ""
+            if filter_conditions:
+                filter_where = "AND " + " AND ".join(filter_conditions)
+            
+            # Build ORDER BY clause
+            order_by = "ORDER BY c.created_at DESC"  # default
+            if sort == 'oldest':
+                order_by = "ORDER BY c.created_at ASC"
+            elif sort == 'title':
+                order_by = "ORDER BY c.title ASC"
+            elif sort == 'popular':
+                order_by = "ORDER BY enrolled_count DESC, c.created_at DESC"
             
             # Count total courses for pagination
             count_query = f"""
@@ -30,10 +67,18 @@ def get_courses():
                 LEFT JOIN users u ON c.teacher_id = u.id
                 {base_where}
                 {search_condition}
+                {filter_where}
             """
             
+            count_params = []
             if search:
-                cur.execute(count_query, (f'%{search}%', f'%{search}%'))
+                count_params.extend([f'%{search}%', f'%{search}%'])
+            
+            # Add filter parameters
+            count_params.extend(filter_params)
+            
+            if count_params:
+                cur.execute(count_query, count_params)
             else:
                 cur.execute(count_query)
             
@@ -45,6 +90,7 @@ def get_courses():
             
             courses_query = f"""
                 SELECT c.id, c.teacher_id, c.title, c.description, c.video_url, c.is_published, c.created_at,
+                       c.category, c.level,
                        u.name as teacher_name,
                        COUNT(e.id) as enrolled_count
                 FROM courses c
@@ -52,16 +98,21 @@ def get_courses():
                 LEFT JOIN enrollments e ON c.id = e.course_id
                 {base_where}
                 {search_condition}
-                GROUP BY c.id, c.teacher_id, c.title, c.description, c.video_url, c.is_published, c.created_at, u.name
-                ORDER BY c.created_at DESC
+                {filter_where}
+                GROUP BY c.id, c.teacher_id, c.title, c.description, c.video_url, c.is_published, c.created_at, c.category, c.level, u.name
+                {order_by}
                 LIMIT %s OFFSET %s
             """
             
+            query_params = []
             if search:
-                cur.execute(courses_query, (f'%{search}%', f'%{search}%', per_page, offset))
-            else:
-                cur.execute(courses_query, (per_page, offset))
+                query_params.extend([f'%{search}%', f'%{search}%'])
             
+            # Add filter parameters
+            query_params.extend(filter_params)
+            query_params.extend([per_page, offset])
+            
+            cur.execute(courses_query, query_params)
             courses = cur.fetchall()
             
         course_list = []
@@ -74,8 +125,10 @@ def get_courses():
                 'video_url': course[4],
                 'is_published': course[5],
                 'created_at': course[6].isoformat() if course[6] else None,
-                'teacher_name': course[7],
-                'enrolled_count': course[8] or 0
+                'category': course[7],
+                'level': course[8],
+                'teacher_name': course[9],
+                'enrolled_count': course[10] or 0
             }
             course_list.append(course_dict)
             
@@ -105,13 +158,14 @@ def get_course(course_id):
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT c.id, c.teacher_id, c.title, c.description, c.video_url, c.is_published, c.created_at,
+                       c.category, c.level,
                        u.name as teacher_name,
                        COUNT(e.id) as enrolled_count
                 FROM courses c
                 LEFT JOIN users u ON c.teacher_id = u.id
                 LEFT JOIN enrollments e ON c.id = e.course_id
                 WHERE c.id = %s
-                GROUP BY c.id, c.teacher_id, c.title, c.description, c.video_url, c.is_published, c.created_at, u.name
+                GROUP BY c.id, c.teacher_id, c.title, c.description, c.video_url, c.is_published, c.created_at, c.category, c.level, u.name
             """, (str(course_id),))
             
             course = cur.fetchone()
@@ -139,8 +193,10 @@ def get_course(course_id):
             'video_url': course[4],
             'is_published': course[5],
             'created_at': course[6].isoformat() if course[6] else None,
-            'teacher_name': course[7],
-            'enrolled_count': course[8] or 0
+            'category': course[7],
+            'level': course[8],
+            'teacher_name': course[9],
+            'enrolled_count': course[10] or 0
         }
         
         return jsonify(course_dict)
@@ -167,9 +223,9 @@ def create_course():
                 return jsonify({'error': 'teacher_id is required for admin'}), 400
                 
             cur.execute("""
-                INSERT INTO courses (teacher_id, title, description, video_url, is_published)
-                VALUES (%s, %s, %s, %s, %s) RETURNING id
-            """, (teacher_id, data['title'], data['description'], data.get('video_url'), data.get('is_published', False)))
+                INSERT INTO courses (teacher_id, title, description, video_url, category, level, is_published)
+                VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id
+            """, (teacher_id, data['title'], data['description'], data.get('video_url'), data.get('category', 'general'), data.get('level', 'beginner'), data.get('is_published', False)))
             
             course_id = cur.fetchone()[0]
             conn.commit()
@@ -208,9 +264,9 @@ def update_course(course_id):
                 teacher_id = current_user['id']
                 
             cur.execute("""
-                UPDATE courses SET teacher_id=%s, title=%s, description=%s, video_url=%s, is_published=%s
+                UPDATE courses SET teacher_id=%s, title=%s, description=%s, video_url=%s, category=%s, level=%s, is_published=%s
                 WHERE id=%s RETURNING id
-            """, (teacher_id, data['title'], data['description'], data.get('video_url'), data.get('is_published', False), str(course_id)))
+            """, (teacher_id, data['title'], data['description'], data.get('video_url'), data.get('category', 'general'), data.get('level', 'beginner'), data.get('is_published', False), str(course_id)))
             
             updated = cur.fetchone()
             conn.commit()

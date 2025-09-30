@@ -50,57 +50,6 @@ class Card extends HTMLElement {
 }
 customElements.define("app-card", Card);
 
-// Button Component
-class Button extends HTMLElement {
-  static get observedAttributes() {
-    return ['variant', 'size', 'disabled', 'loading'];
-  }
-
-  connectedCallback() {
-    this.render();
-  }
-
-  attributeChangedCallback() {
-    this.render();
-  }
-
-  render() {
-    const variant = this.getAttribute('variant') || 'primary';
-    const size = this.getAttribute('size') || 'md';
-    const disabled = this.hasAttribute('disabled');
-    const loading = this.hasAttribute('loading');
-
-    const variants = {
-      primary: 'bg-blue-600 hover:bg-blue-700 text-white',
-      secondary: 'bg-gray-600 hover:bg-gray-700 text-white',
-      success: 'bg-green-600 hover:bg-green-700 text-white',
-      danger: 'bg-red-600 hover:bg-red-700 text-white',
-      outline: 'border border-blue-600 text-blue-600 hover:bg-blue-50',
-      ghost: 'text-blue-600 hover:bg-blue-50'
-    };
-
-    const sizes = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-4 py-2 text-base',
-      lg: 'px-6 py-3 text-lg'
-    };
-
-    const baseClasses = 'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
-    const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : '';
-    const loadingClasses = loading ? 'cursor-wait' : '';
-
-    this.innerHTML = html`
-      <button 
-        class="${baseClasses} ${variants[variant]} ${sizes[size]} ${disabledClasses} ${loadingClasses}"
-        ${disabled ? 'disabled' : ''}
-      >
-        ${loading ? html`<div class="loading w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>` : ''}
-        <slot></slot>
-      </button>
-    `;
-  }
-}
-customElements.define("app-button", Button);
 
 // Modal Component
 class Modal extends HTMLElement {

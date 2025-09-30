@@ -134,7 +134,30 @@ class UserList extends HTMLElement {
 
   connectedCallback() {
     this.render();
-    this.loadUsers();
+    // Wait for SchoolApp to be available
+    this.waitForSchoolApp().then(() => {
+      this.loadUsers();
+    }).catch(error => {
+      console.error('SchoolApp not available:', error);
+      this.loading = false;
+      this.render();
+    });
+  }
+
+  async waitForSchoolApp() {
+    // Wait for SchoolApp to be available and ready
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
+    
+    while (attempts < maxAttempts) {
+      if (window.SchoolApp && window.SchoolApp.apiCall && window.SchoolApp.ready) {
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    throw new Error('SchoolApp not available after waiting');
   }
 
   async loadUsers(role = 'all') {
@@ -142,6 +165,11 @@ class UserList extends HTMLElement {
       this.loading = true;
       this.currentRole = role;
       this.render();
+      
+      // Wait for SchoolApp to be available
+      if (!window.SchoolApp || !window.SchoolApp.apiCall) {
+        throw new Error('SchoolApp is not available');
+      }
       
       const endpoint = role === 'all' ? '/users' : `/users?role=${role}`;
       const data = await window.SchoolApp.apiCall(endpoint);
@@ -152,6 +180,20 @@ class UserList extends HTMLElement {
       this.loading = false;
       this.render();
       console.error('Failed to load users:', error);
+      
+      // Show user-friendly error message
+      this.innerHTML = `
+        <div class="text-center py-8">
+          <div class="text-red-600 mb-4">
+            <i class="bi bi-exclamation-triangle text-4xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">Failed to load users</h3>
+          <p class="text-gray-600 mb-4">Please refresh the page and try again.</p>
+          <button onclick="location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            Refresh Page
+          </button>
+        </div>
+      `;
     }
   }
 
@@ -171,25 +213,25 @@ class UserList extends HTMLElement {
           <div class="flex space-x-2">
             <button 
               class="px-4 py-2 rounded-lg transition-colors ${this.currentRole === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-              onclick="this.loadUsers('all')"
+              data-role="all"
             >
               All Users
             </button>
             <button 
               class="px-4 py-2 rounded-lg transition-colors ${this.currentRole === 'admin' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-              onclick="this.loadUsers('admin')"
+              data-role="admin"
             >
               Admins
             </button>
             <button 
               class="px-4 py-2 rounded-lg transition-colors ${this.currentRole === 'teacher' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-              onclick="this.loadUsers('teacher')"
+              data-role="teacher"
             >
               Teachers
             </button>
             <button 
               class="px-4 py-2 rounded-lg transition-colors ${this.currentRole === 'student' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-              onclick="this.loadUsers('student')"
+              data-role="student"
             >
               Students
             </button>
@@ -235,12 +277,30 @@ class UserList extends HTMLElement {
         `}
       </div>
     `;
+    
+    // Setup event listeners after rendering
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    // Add event listeners for filter buttons
+    const filterButtons = this.querySelectorAll('[data-role]');
+    filterButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const role = e.target.getAttribute('data-role');
+        this.loadUsers(role);
+      });
+    });
   }
 }
 customElements.define("user-list", UserList);
 
 // User Form Component
 class UserForm extends HTMLElement {
+  static get observedAttributes() {
+    return ['user-id'];
+  }
+
   constructor() {
     super();
     this.user = null;
@@ -249,8 +309,26 @@ class UserForm extends HTMLElement {
   }
 
   connectedCallback() {
-    this.render();
-    this.setupEventListeners();
+    // Check if we have a user-id attribute for editing
+    const userId = this.getAttribute('user-id');
+    if (userId) {
+      // Don't render here, let loadUser handle it
+      this.loadUser(userId).catch(error => {
+        console.error('Error loading user:', error);
+      });
+    } else {
+      // Only render if not editing
+      this.render();
+      this.setupEventListeners();
+    }
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'user-id' && newValue && newValue !== oldValue) {
+      this.loadUser(newValue).catch(error => {
+        console.error('Error loading user:', error);
+      });
+    }
   }
 
   render() {
@@ -318,13 +396,13 @@ class UserForm extends HTMLElement {
         </div>
         
         <div class="flex justify-end space-x-3">
-          <app-button variant="outline" type="button" onclick="history.back()">
+          <button type="button" onclick="history.back()" class="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
             Cancel
-          </app-button>
-          <app-button variant="primary" type="submit" id="submit-btn">
+          </button>
+          <button type="submit" id="submit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             <i class="bi bi-save mr-2"></i>
             ${this.isEdit ? 'Update User' : 'Create User'}
-          </app-button>
+          </button>
         </div>
       </form>
     `;
@@ -376,27 +454,72 @@ class UserForm extends HTMLElement {
     });
   }
 
-  loadUser(userId) {
+  async loadUser(userId) {
     this.isEdit = true;
-    this.render();
+    
+    // Wait for SchoolApp to be available
+    await this.waitForSchoolApp();
     
     window.SchoolApp.apiCall(`/users/${userId}`)
       .then(user => {
         this.user = user;
-        this.populateForm();
+        // Render with user data, then populate form and setup listeners
+        this.render();
+        // Use setTimeout to ensure DOM is ready after render
+        setTimeout(() => {
+          this.populateForm();
+          this.setupEventListeners();
+        }, 100);
       })
       .catch(error => {
         console.error('Failed to load user:', error);
-        window.SchoolApp.showFlash('Failed to load user', 'error');
+        if (window.SchoolApp && window.SchoolApp.showFlash) {
+          window.SchoolApp.showFlash('Failed to load user', 'error');
+        }
       });
   }
 
-  populateForm() {
-    if (!this.user) return;
+  waitForSchoolApp() {
+    return new Promise((resolve) => {
+      if (window.SchoolApp && window.SchoolApp.apiCall) {
+        resolve();
+        return;
+      }
+      
+      const checkInterval = setInterval(() => {
+        if (window.SchoolApp && window.SchoolApp.apiCall) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
+      
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error('SchoolApp not available after 5 seconds');
+        resolve(); // Resolve anyway to prevent hanging
+      }, 5000);
+    });
+  }
 
-    this.querySelector('#name').value = this.user.name || '';
-    this.querySelector('#email').value = this.user.email || '';
-    this.querySelector('#role').value = this.user.role || '';
+  populateForm() {
+    if (!this.user) {
+      return;
+    }
+
+    const nameInput = this.querySelector('#name');
+    const emailInput = this.querySelector('#email');
+    const roleSelect = this.querySelector('#role');
+
+    if (nameInput) {
+      nameInput.value = this.user.name || '';
+    }
+    if (emailInput) {
+      emailInput.value = this.user.email || '';
+    }
+    if (roleSelect) {
+      roleSelect.value = this.user.role || '';
+    }
   }
 }
 customElements.define("user-form", UserForm);
@@ -415,11 +538,15 @@ class UserProfile extends HTMLElement {
 
   connectedCallback() {
     this.render();
-    this.loadUser();
+    this.loadUser().catch(error => {
+      console.error('Error loading user:', error);
+    });
   }
 
   attributeChangedCallback() {
-    this.loadUser();
+    this.loadUser().catch(error => {
+      console.error('Error loading user:', error);
+    });
   }
 
   async loadUser() {
@@ -430,6 +557,9 @@ class UserProfile extends HTMLElement {
       this.loading = true;
       this.render();
 
+      // Wait for SchoolApp to be available
+      await this.waitForSchoolApp();
+
       const user = await window.SchoolApp.apiCall(`/users/${userId}`);
       this.user = user;
       this.loading = false;
@@ -439,6 +569,29 @@ class UserProfile extends HTMLElement {
       this.render();
       console.error('Failed to load user:', error);
     }
+  }
+
+  waitForSchoolApp() {
+    return new Promise((resolve) => {
+      if (window.SchoolApp && window.SchoolApp.apiCall) {
+        resolve();
+        return;
+      }
+      
+      const checkInterval = setInterval(() => {
+        if (window.SchoolApp && window.SchoolApp.apiCall) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
+      
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error('SchoolApp not available after 5 seconds');
+        resolve(); // Resolve anyway to prevent hanging
+      }, 5000);
+    });
   }
 
   render() {
@@ -505,14 +658,14 @@ class UserProfile extends HTMLElement {
             </div>
             
             <div class="flex space-x-3">
-              <app-button variant="outline">
+              <button class="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
                 <i class="bi bi-pencil mr-2"></i>
                 Edit Profile
-              </app-button>
-              <app-button variant="primary">
+              </button>
+              <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 <i class="bi bi-envelope mr-2"></i>
                 Send Message
-              </app-button>
+              </button>
             </div>
           </div>
           

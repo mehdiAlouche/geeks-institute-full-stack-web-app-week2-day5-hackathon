@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}My Courses - School Management System{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <!-- Hero Section -->
+  <div class="gradient-bg text-white py-16">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">My Courses</h1>
+        <p class="text-xl md:text-2xl mb-8 opacity-90">Continue your learning journey</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/courses" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            <i class="bi bi-search mr-2"></i>
+            Browse All Courses
+          </a>
+          <a href="/student-dashboard" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+            <i class="bi bi-speedometer2 mr-2"></i>
+            Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 py-12">
+    <!-- My Enrolled Courses Section -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-3xl font-bold text-gray-800">My Enrolled Courses</h2>
+          <p class="text-gray-600 mt-2">Continue where you left off</p>
+        </div>
+        <div class="text-sm text-gray-500">
+          <span id="course-count">Loading...</span> courses enrolled
+        </div>
+      </div>
+
+      <!-- Courses Container -->
+      <div id="my-courses-list" class="min-h-[400px]">
+        <div class="flex items-center justify-center py-12">
+          <loading-spinner></loading-spinner>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+      <app-card title="Continue Learning" subtitle="Pick up where you left off">
+        <div class="space-y-3">
+          <a href="/courses" class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+            <i class="bi bi-play-circle text-blue-600 text-xl mr-3"></i>
+            <span class="text-gray-800">Resume Latest Course</span>
+          </a>
+          <a href="/notifications" class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+            <i class="bi bi-bell text-green-600 text-xl mr-3"></i>
+            <span class="text-gray-800">View Notifications</span>
+          </a>
+        </div>
+      </app-card>
+
+      <app-card title="Discover More" subtitle="Expand your knowledge">
+        <div class="space-y-3">
+          <a href="/courses" class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+            <i class="bi bi-search text-purple-600 text-xl mr-3"></i>
+            <span class="text-gray-800">Browse All Courses</span>
+          </a>
+          <a href="/courses?category=web-dev" class="flex items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+            <i class="bi bi-code-slash text-orange-600 text-xl mr-3"></i>
+            <span class="text-gray-800">Web Development</span>
+          </a>
+        </div>
+      </app-card>
+
+      <app-card title="Your Progress" subtitle="Track your achievements">
+        <div class="space-y-3">
+          <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+            <i class="bi bi-trophy text-yellow-600 text-xl mr-3"></i>
+            <div>
+              <span class="text-gray-800 font-medium">Certificates Earned</span>
+              <p class="text-sm text-gray-500">0 certificates</p>
+            </div>
+          </div>
+          <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+            <i class="bi bi-clock text-blue-600 text-xl mr-3"></i>
+            <div>
+              <span class="text-gray-800 font-medium">Study Time</span>
+              <p class="text-sm text-gray-500">0 hours</p>
+            </div>
+          </div>
+        </div>
+      </app-card>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Wait for SchoolApp to be available
+  async function waitForSchoolApp() {
+    return new Promise((resolve) => {
+      if (window.SchoolApp && window.SchoolApp.apiCall) {
+        resolve();
+        return;
+      }
+      
+      const checkInterval = setInterval(() => {
+        if (window.SchoolApp && window.SchoolApp.apiCall) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
+      
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error('SchoolApp not available after 5 seconds');
+        resolve(); // Resolve anyway to prevent hanging
+      }, 5000);
+    });
+  }
+
+  // Load student's enrolled courses
+  document.addEventListener('DOMContentLoaded', async function() {
+    const coursesContainer = document.getElementById('my-courses-list');
+    const courseCountElement = document.getElementById('course-count');
+    
+    if (!coursesContainer) {
+      console.error('coursesContainer element not found');
+      return;
+    }
+    
+    try {
+      // Wait for SchoolApp to be available
+      await waitForSchoolApp();
+      
+      const response = await window.SchoolApp.apiCall('/enrollments/my-courses');
+      const courses = Array.isArray(response) ? response : (response.courses || []);
+      
+      // Update course count
+      if (courseCountElement) {
+        courseCountElement.textContent = courses.length;
+      }
+      
+      if (courses.length === 0) {
+        coursesContainer.innerHTML = `
+          <empty-state 
+            title="No enrolled courses"
+            description="You haven't enrolled in any courses yet. Start exploring our course catalog!"
+            icon="bi-book"
+            action-text="Browse Courses"
+            action-href="/courses"
+          ></empty-state>
+        `;
+        return;
+      }
+      
+      coursesContainer.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          ${courses.map(course => `
+            <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+              <div class="p-6">
+                <div class="flex items-start justify-between mb-4">
+                  <h3 class="text-xl font-semibold text-gray-800 line-clamp-2">${course.title}</h3>
+                  <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Enrolled</span>
+                </div>
+                
+                <p class="text-gray-600 text-sm mb-4 line-clamp-3">${course.description || 'No description available'}</p>
+                
+                <div class="flex items-center text-sm text-gray-500 mb-4">
+                  <i class="bi bi-person mr-1"></i>
+                  <span>${course.teacher_name}</span>
+                </div>
+                
+                <div class="flex items-center text-xs text-gray-400 mb-4">
+                  <i class="bi bi-calendar mr-1"></i>
+                  <span>Enrolled: ${new Date(course.enrolled_at).toLocaleDateString()}</span>
+                </div>
+                
+                <div class="flex space-x-2">
+                  <a href="/courses/${course.id}" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-center text-sm font-medium hover:bg-blue-700 transition-colors">
+                    <i class="bi bi-play-circle mr-1"></i>
+                    Continue Learning
+                  </a>
+                  <button onclick="viewCourseDetails('${course.id}')" class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+                    <i class="bi bi-info-circle"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+    } catch (error) {
+      console.error('Failed to load enrolled courses:', error);
+      coursesContainer.innerHTML = `
+        <app-alert type="error">
+          <div class="text-center py-8">
+            <i class="bi bi-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Failed to load courses</h3>
+            <p class="text-gray-600 mb-4">There was an error loading your enrolled courses. Please try again.</p>
+            <button onclick="location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="bi bi-arrow-clockwise mr-1"></i>
+              Retry
+            </button>
+          </div>
+        </app-alert>
+      `;
+    }
+  });
+
+  // View course details function
+  function viewCourseDetails(courseId) {
+    window.location.href = `/courses/${courseId}`;
+  }
+</script>
+{% endblock %}

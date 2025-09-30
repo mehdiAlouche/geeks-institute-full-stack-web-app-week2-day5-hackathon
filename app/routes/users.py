@@ -15,38 +15,44 @@ def get_users():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 6, type=int)
     search = request.args.get('search', '', type=str)
+    role_filter = request.args.get('role', '', type=str)
     
     try:
         with conn.cursor() as cur:
-            # Count total users
-            if search:
-                cur.execute("SELECT COUNT(*) FROM users WHERE name ILIKE %s OR email ILIKE %s", 
-                           (f'%{search}%', f'%{search}%'))
-            else:
-                cur.execute("SELECT COUNT(*) FROM users")
+            # Build WHERE conditions
+            where_conditions = []
+            params = []
             
+            if search:
+                where_conditions.append("(name ILIKE %s OR email ILIKE %s)")
+                params.extend([f'%{search}%', f'%{search}%'])
+            
+            if role_filter and role_filter in ['admin', 'teacher', 'student']:
+                where_conditions.append("role = %s")
+                params.append(role_filter)
+            
+            where_clause = ""
+            if where_conditions:
+                where_clause = "WHERE " + " AND ".join(where_conditions)
+            
+            # Count total users
+            count_query = f"SELECT COUNT(*) FROM users {where_clause}"
+            cur.execute(count_query, params)
             total_users = cur.fetchone()[0]
             total_pages = (total_users + per_page - 1) // per_page
             
             # Get paginated users
             offset = (page - 1) * per_page
+            users_query = f"""
+                SELECT id, email, name, role, created_at 
+                FROM users 
+                {where_clause}
+                ORDER BY created_at DESC 
+                LIMIT %s OFFSET %s
+            """
             
-            if search:
-                cur.execute("""
-                    SELECT id, email, name, role, created_at 
-                    FROM users 
-                    WHERE name ILIKE %s OR email ILIKE %s
-                    ORDER BY created_at DESC 
-                    LIMIT %s OFFSET %s
-                """, (f'%{search}%', f'%{search}%', per_page, offset))
-            else:
-                cur.execute("""
-                    SELECT id, email, name, role, created_at 
-                    FROM users 
-                    ORDER BY created_at DESC 
-                    LIMIT %s OFFSET %s
-                """, (per_page, offset))
-            
+            query_params = params + [per_page, offset]
+            cur.execute(users_query, query_params)
             users = cur.fetchall()
             
         user_list = []

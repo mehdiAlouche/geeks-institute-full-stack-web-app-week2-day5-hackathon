@@ -168,6 +168,11 @@ def create_comment():
             conn.commit()
         
         return jsonify({'id': str(comment_id), 'message': 'Comment created successfully'}), 201
+        
+    except Exception as e:
+        print(f"ERROR in create_comment: {e}")
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
 

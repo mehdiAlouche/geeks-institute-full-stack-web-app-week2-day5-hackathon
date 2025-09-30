@@ -43,16 +43,22 @@ def require_admin():
     """Decorator to require admin role for frontend routes"""
     def decorator(func):
         def wrapper(*args, **kwargs):
-            token = request.cookies.get('auth_token') or request.headers.get('Authorization', '').replace('Bearer ', '')
+            # Check for token in cookies first, then Authorization header
+            token = request.cookies.get('auth_token')
+            if not token:
+                auth_header = request.headers.get('Authorization', '')
+                if auth_header.startswith('Bearer '):
+                    token = auth_header.replace('Bearer ', '')
+            
             if not token:
                 return redirect('/login')
             
             try:
                 user = verify_token(token)
-                if user['role'] != 'admin':
+                if not user or user['role'] != 'admin':
                     return redirect('/courses')  # Redirect to courses page if not admin
                 return func(*args, **kwargs)
-            except:
+            except Exception as e:
                 return redirect('/login')
         wrapper.__name__ = func.__name__
         return wrapper
@@ -119,14 +125,22 @@ def users():
     return render_template('users/index.html')
 
 @app.route('/users/<user_id>')
+@require_admin()
 def user_detail(user_id):
-    """User detail page"""
+    """User detail page - only for admins"""
     return render_template('users/detail.html', user={'id': user_id})
 
 @app.route('/users/create')
+@require_admin()
 def create_user():
-    """Create user page"""
+    """Create user page - only for admins"""
     return render_template('users/create.html')
+
+@app.route('/users/<user_id>/edit')
+@require_admin()
+def edit_user(user_id):
+    """User edit page - only for admins"""
+    return render_template('users/create.html', user={'id': user_id, 'edit': True})
 
 @app.route('/student-dashboard')
 def student_dashboard():
@@ -148,7 +162,7 @@ def student_dashboard():
 
 @app.route('/my-courses')
 def my_courses():
-    """Student's enrolled courses page"""
+    """Student's enrolled courses page - shows only enrolled courses"""
     # Check if user is authenticated
     token = request.cookies.get('auth_token') or request.headers.get('Authorization', '').replace('Bearer ', '')
     if not token:
@@ -162,7 +176,7 @@ def my_courses():
     except:
         return redirect('/login')
     
-    return render_template('student_dashboard.html')  # Reuse student dashboard for now
+    return render_template('my_courses.html')
 
 @app.errorhandler(404)
 def not_found(e):

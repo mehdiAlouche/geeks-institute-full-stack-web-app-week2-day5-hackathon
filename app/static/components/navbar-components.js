@@ -1,9 +1,20 @@
 const html = String.raw;
 
 class Navbar extends HTMLElement {
+  constructor() {
+    super();
+    this.handleUserMenuClick = this.handleUserMenuClick.bind(this);
+    this.handleMobileMenuClick = this.handleMobileMenuClick.bind(this);
+    this.handleOutsideClick = this.handleOutsideClick.bind(this);
+  }
+
   connectedCallback() {
     this.render();
     this.setupEventListeners();
+  }
+
+  disconnectedCallback() {
+    this.removeEventListeners();
   }
 
   render() {
@@ -191,39 +202,50 @@ class Navbar extends HTMLElement {
   }
 
   setupEventListeners() {
-    // User dropdown toggle
-    this.addEventListener('click', (e) => {
-      if (e.target.closest('#user-menu-button')) {
-        e.preventDefault();
-        e.stopPropagation();
-        const menu = this.querySelector('#user-menu');
-        if (menu) {
-          menu.classList.toggle('hidden');
-        }
-      }
-    });
+    // Remove any existing event listeners to prevent duplicates
+    this.removeEventListeners();
+    
+    // Add event listeners
+    this.addEventListener('click', this.handleUserMenuClick);
+    this.addEventListener('click', this.handleMobileMenuClick);
+    document.addEventListener('click', this.handleOutsideClick);
+  }
 
-    // Mobile menu toggle
-    this.addEventListener('click', (e) => {
-      if (e.target.closest('#mobile-menu-button')) {
-        e.preventDefault();
-        e.stopPropagation();
-        const menu = this.querySelector('#mobile-menu');
-        if (menu) {
-          menu.classList.toggle('hidden');
-        }
-      }
-    });
+  removeEventListeners() {
+    this.removeEventListener('click', this.handleUserMenuClick);
+    this.removeEventListener('click', this.handleMobileMenuClick);
+    document.removeEventListener('click', this.handleOutsideClick);
+  }
 
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('navbar-component')) {
-        const userMenu = this.querySelector('#user-menu');
-        const mobileMenu = this.querySelector('#mobile-menu');
-        if (userMenu) userMenu.classList.add('hidden');
-        if (mobileMenu) mobileMenu.classList.add('hidden');
+  handleUserMenuClick(e) {
+    if (e.target.closest('#user-menu-button')) {
+      e.preventDefault();
+      e.stopPropagation();
+      const menu = this.querySelector('#user-menu');
+      if (menu) {
+        menu.classList.toggle('hidden');
       }
-    });
+    }
+  }
+
+  handleMobileMenuClick(e) {
+    if (e.target.closest('#mobile-menu-button')) {
+      e.preventDefault();
+      e.stopPropagation();
+      const menu = this.querySelector('#mobile-menu');
+      if (menu) {
+        menu.classList.toggle('hidden');
+      }
+    }
+  }
+
+  handleOutsideClick(e) {
+    if (!e.target.closest('navbar-component')) {
+      const userMenu = this.querySelector('#user-menu');
+      const mobileMenu = this.querySelector('#mobile-menu');
+      if (userMenu) userMenu.classList.add('hidden');
+      if (mobileMenu) mobileMenu.classList.add('hidden');
+    }
   }
 }
 

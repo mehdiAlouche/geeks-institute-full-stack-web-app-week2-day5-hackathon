@@ -148,13 +148,45 @@
 
 {% block scripts %}
 <script>
-  // Load student's enrolled courses
+  // Wait for SchoolApp to be available
+  async function waitForSchoolApp() {
+    return new Promise((resolve) => {
+      if (window.SchoolApp && window.SchoolApp.apiCall) {
+        resolve();
+        return;
+      }
+      
+      const checkInterval = setInterval(() => {
+        if (window.SchoolApp && window.SchoolApp.apiCall) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
+      
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error('SchoolApp not available after 5 seconds');
+        resolve(); // Resolve anyway to prevent hanging
+      }, 5000);
+    });
+  }
+
+  // Load student's enrolled courses (only on my-courses page)
   document.addEventListener('DOMContentLoaded', async function() {
     const coursesContainer = document.getElementById('my-courses-list');
     
+    if (!coursesContainer) {
+      // Element not found, probably not on my-courses page
+      return;
+    }
+    
     try {
+      // Wait for SchoolApp to be available
+      await waitForSchoolApp();
+      
       const response = await window.SchoolApp.apiCall('/enrollments/my-courses');
-      const courses = response.courses || [];
+      const courses = Array.isArray(response) ? response : (response.courses || []);
       
       if (courses.length === 0) {
         coursesContainer.innerHTML = `
@@ -188,11 +220,13 @@
       
     } catch (error) {
       console.error('Failed to load enrolled courses:', error);
-      coursesContainer.innerHTML = `
-        <app-alert type="error">
-          Failed to load your courses. Please try again.
-        </app-alert>
-      `;
+      if (coursesContainer) {
+        coursesContainer.innerHTML = `
+          <app-alert type="error">
+            Failed to load your courses. Please try again.
+          </app-alert>
+        `;
+      }
     }
   });
 </script>

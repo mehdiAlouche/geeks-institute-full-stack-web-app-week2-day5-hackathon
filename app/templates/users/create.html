@@ -9,8 +9,8 @@
     <div class="max-w-7xl mx-auto px-4 py-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Create New User</h1>
-          <p class="mt-2 text-gray-600">Add a new user to the system</p>
+          <h1 class="text-3xl font-bold text-gray-900">{% if user %}Edit User{% else %}Create New User{% endif %}</h1>
+          <p class="mt-2 text-gray-600">{% if user %}Update user information{% else %}Add a new user to the system{% endif %}</p>
         </div>
         <a href="/users" class="text-gray-600 hover:text-gray-900">
           <i class="bi bi-arrow-left mr-2"></i>
@@ -22,7 +22,7 @@
 
   <!-- User Form -->
   <div class="max-w-4xl mx-auto px-4 py-8">
-    <user-form></user-form>
+    <user-form{% if user %} user-id="{{ user.id }}"{% endif %}></user-form>
   </div>
 </div>
 {% endblock %}

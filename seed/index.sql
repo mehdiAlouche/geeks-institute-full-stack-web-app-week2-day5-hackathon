@@ -25,8 +25,13 @@ CREATE TABLE courses (
     teacher_id UUID REFERENCES users(id),
     title VARCHAR(200) NOT NULL,
     description TEXT,
+    video_url TEXT,
+    category VARCHAR(50) DEFAULT 'general',
+    level VARCHAR(20) DEFAULT 'beginner',
     is_published BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT check_category CHECK (category IN ('web-dev', 'mobile', 'data-science', 'design', 'general', 'programming', 'database', 'devops')),
+    CONSTRAINT check_level CHECK (level IN ('beginner', 'intermediate', 'advanced'))
 );
 
 -- =============================================
@@ -36,7 +41,7 @@ CREATE TABLE course_files (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     course_id UUID REFERENCES courses(id),
     title VARCHAR(200) NOT NULL,
-    file_type VARCHAR(10) CHECK (file_type IN ('video', 'pdf', 'document')),
+    file_type VARCHAR(10) CHECK (file_type IN ('video', 'pdf', 'document', 'discussion')),
     file_url TEXT NOT NULL,
     file_order INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -92,6 +97,9 @@ CREATE TABLE notifications (
 -- Create Indexes for Performance
 -- =============================================
 CREATE INDEX idx_courses_teacher ON courses(teacher_id);
+CREATE INDEX idx_courses_category ON courses(category);
+CREATE INDEX idx_courses_level ON courses(level);
+CREATE INDEX idx_courses_published ON courses(is_published);
 CREATE INDEX idx_files_course ON course_files(course_id);
 CREATE INDEX idx_enrollments_student ON enrollments(student_id);
 CREATE INDEX idx_enrollments_course ON enrollments(course_id);
@@ -107,35 +115,77 @@ CREATE INDEX idx_notifications_unread ON notifications(user_id, is_read) WHERE i
 
 -- Insert sample users
 INSERT INTO users (email, password_hash, name, role) VALUES
-('admin@school.com', 'example456', 'System Admin', 'admin'),
-('john.teacher@school.com', 'example456', 'John Smith', 'teacher'),
-('sara.teacher@school.com', 'example456', 'Sara Johnson', 'teacher'),
-('mike.student@school.com', 'example456', 'Mike Brown', 'student'),
-('lisa.student@school.com', 'example456', 'Lisa Wilson', 'student'),
-('tom.student@school.com', 'example456', 'Tom Davis', 'student');
+('admin@school.com', '0d7a12d8e1123ec1c28c861843128eac72f5422dca6af52fe49f4cb8441cb889', 'System Admin', 'admin'),
+('john.teacher@school.com', '0d7a12d8e1123ec1c28c861843128eac72f5422dca6af52fe49f4cb8441cb889', 'John Smith', 'teacher'),
+('sara.teacher@school.com', '0d7a12d8e1123ec1c28c861843128eac72f5422dca6af52fe49f4cb8441cb889', 'Sara Johnson', 'teacher'),
+('mike.student@school.com', '0d7a12d8e1123ec1c28c861843128eac72f5422dca6af52fe49f4cb8441cb889', 'Mike Brown', 'student'),
+('lisa.student@school.com', '0d7a12d8e1123ec1c28c861843128eac72f5422dca6af52fe49f4cb8441cb889', 'Lisa Wilson', 'student'),
+('tom.student@school.com', '0d7a12d8e1123ec1c28c861843128eac72f5422dca6af52fe49f4cb8441cb889', 'Tom Davis', 'student');
 
 -- Insert sample courses
-INSERT INTO courses (teacher_id, title, description, is_published, video_url) VALUES
+INSERT INTO courses (teacher_id, title, description, video_url, category, level, is_published) VALUES
 (
     (SELECT id FROM users WHERE email = 'john.teacher@school.com'),
     'Web Development Fundamentals',
     'Learn HTML, CSS, and JavaScript from scratch',
-    true,
-    'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    'web-dev',
+    'beginner',
+    true
 ),
 (
     (SELECT id FROM users WHERE email = 'john.teacher@school.com'),
     'React.js Masterclass',
     'Build modern web applications with React',
-    true,
-    'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    'web-dev',
+    'intermediate',
+    true
 ),
 (
     (SELECT id FROM users WHERE email = 'sara.teacher@school.com'),
     'Python for Beginners',
     'Start your programming journey with Python',
-    true,
-    'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    'programming',
+    'beginner',
+    true
+),
+(
+    (SELECT id FROM users WHERE email = 'john.teacher@school.com'),
+    'Advanced CSS Techniques',
+    'Master advanced CSS features and modern layouts',
+    'https://www.youtube.com/watch?v=example',
+    'web-dev',
+    'advanced',
+    false
+),
+(
+    (SELECT id FROM users WHERE email = 'sara.teacher@school.com'),
+    'Mobile App Development with React Native',
+    'Build cross-platform mobile apps using React Native',
+    'https://www.youtube.com/watch?v=example',
+    'mobile',
+    'intermediate',
+    true
+),
+(
+    (SELECT id FROM users WHERE email = 'john.teacher@school.com'),
+    'Data Science with Python',
+    'Introduction to data analysis and visualization',
+    'https://www.youtube.com/watch?v=example',
+    'data-science',
+    'beginner',
+    true
+),
+(
+    (SELECT id FROM users WHERE email = 'sara.teacher@school.com'),
+    'UI/UX Design Principles',
+    'Learn the fundamentals of user interface and experience design',
+    'https://www.youtube.com/watch?v=example',
+    'design',
+    'beginner',
+    true
 );
 
 -- Insert sample course files

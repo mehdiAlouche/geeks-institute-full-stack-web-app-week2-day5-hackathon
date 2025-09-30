@@ -161,6 +161,10 @@
         login: function(token, user) {
           localStorage.setItem('auth_token', token);
           localStorage.setItem('current_user', JSON.stringify(user));
+          
+          // Set cookie for server-side authentication
+          document.cookie = `auth_token=${token}; path=/; max-age=3600; SameSite=Lax`;
+          
           this.showFlash('Login successful!', 'success');
           // Refresh navbar to show user info
           this.refreshNavbar();
@@ -170,6 +174,10 @@
         logout: function() {
           localStorage.removeItem('auth_token');
           localStorage.removeItem('current_user');
+          
+          // Clear cookie
+          document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          
           this.showFlash('Logged out successfully', 'info');
           // Refresh navbar to hide user info
           this.refreshNavbar();
@@ -182,7 +190,8 @@
           if (navbar) {
             // Small delay to ensure authentication state is updated
             setTimeout(() => {
-              navbar.connectedCallback();
+              navbar.render();
+              navbar.setupEventListeners();
             }, 100);
           }
         },

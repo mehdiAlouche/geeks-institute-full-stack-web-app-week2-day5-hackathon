@@ -102,17 +102,68 @@ class CourseCard extends HTMLElement {
         const courseId = this.getAttribute('course-id');
         if (!courseId) return;
 
+        const enrollBtn = this.querySelector('#enroll-btn');
+        const isEnrolled = this.getAttribute('is-enrolled') === 'true';
+        
+        if (isEnrolled) {
+          // Already enrolled, do nothing or show message
+          window.SchoolApp.showFlash('You are already enrolled in this course!', 'info');
+          return;
+        }
+
         try {
-          await window.SchoolApp.apiCall(`/enrollments`, {
+          enrollBtn.setAttribute('loading', '');
+          enrollBtn.disabled = true;
+          
+          const response = await window.SchoolApp.apiCall(`/enrollments`, {
             method: 'POST',
             body: JSON.stringify({ course_id: courseId })
           });
           
           window.SchoolApp.showFlash('Successfully enrolled in course!', 'success');
-          this.querySelector('#enroll-btn').innerHTML = '<i class="bi bi-check-circle"></i>';
-          this.querySelector('#enroll-btn').classList.add('bg-green-100', 'text-green-700');
+          this.setAttribute('is-enrolled', 'true');
+          this.render(); // Re-render to update the button state
         } catch (error) {
           console.error('Enrollment error:', error);
+          const errorMessage = error.message || 'Failed to enroll in course';
+          window.SchoolApp.showFlash(errorMessage, 'error');
+        } finally {
+          enrollBtn.removeAttribute('loading');
+          enrollBtn.disabled = false;
+        }
+      }
+      
+      if (e.target.closest('#delete-btn')) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const courseId = this.getAttribute('course-id');
+        if (!courseId) return;
+
+        // Show confirmation dialog
+        if (confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+          try {
+            const deleteBtn = this.querySelector('#delete-btn');
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+            
+            await window.SchoolApp.apiCall(`/courses/${courseId}`, {
+              method: 'DELETE'
+            });
+            
+            window.SchoolApp.showFlash('Course deleted successfully!', 'success');
+            // Remove the course card from the DOM
+            this.remove();
+          } catch (error) {
+            console.error('Delete course error:', error);
+            const errorMessage = error.message || 'Failed to delete course';
+            window.SchoolApp.showFlash(errorMessage, 'error');
+            
+            // Reset button state
+            const deleteBtn = this.querySelector('#delete-btn');
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = '<i class="bi bi-trash"></i>';
+          }
         }
       }
     });
@@ -152,7 +203,7 @@ class CourseList extends HTMLElement {
     throw new Error('SchoolApp not available after waiting');
   }
 
-  async loadCourses(page = 1, search = '') {
+  async loadCourses(page = 1, search = '', filters = {}) {
     try {
       this.loading = true;
       this.render();
@@ -171,9 +222,30 @@ class CourseList extends HTMLElement {
         params.append('search', search);
       }
       
+      // Add filter parameters
+      if (filters.category) {
+        params.append('category', filters.category);
+      }
+      if (filters.level) {
+        params.append('level', filters.level);
+      }
+      if (filters.status) {
+        params.append('status', filters.status);
+      }
+      if (filters.sort) {
+        params.append('sort', filters.sort);
+      }
+      
       const data = await window.SchoolApp.apiCall(`/courses?${params}`);
       this.courses = data.courses || data; // Handle both paginated and non-paginated responses
       this.pagination = data.pagination || null;
+      
+      // Check enrollment status for each course if user is a student
+      const user = window.SchoolApp?.getCurrentUser();
+      if (user?.role === 'student') {
+        await this.checkEnrollmentStatus();
+      }
+      
       this.loading = false;
       this.render();
     } catch (error) {
@@ -196,6 +268,35 @@ class CourseList extends HTMLElement {
           </button>
         </div>
       `;
+    }
+  }
+
+  async checkEnrollmentStatus() {
+    if (!this.courses || this.courses.length === 0) return;
+    
+    try {
+      const enrollmentPromises = this.courses.map(async (course) => {
+        try {
+          const enrollmentData = await window.SchoolApp.apiCall(`/enrollments/check/${course.id}`);
+          return { courseId: course.id, enrolled: enrollmentData.enrolled };
+        } catch (error) {
+          console.error(`Failed to check enrollment for course ${course.id}:`, error);
+          return { courseId: course.id, enrolled: false };
+        }
+      });
+      
+      const enrollmentResults = await Promise.all(enrollmentPromises);
+      
+      // Update courses with enrollment status
+      this.courses = this.courses.map(course => {
+        const enrollmentResult = enrollmentResults.find(r => r.courseId === course.id);
+        return {
+          ...course,
+          is_enrolled: enrollmentResult ? enrollmentResult.enrolled : false
+        };
+      });
+    } catch (error) {
+      console.error('Failed to check enrollment status:', error);
     }
   }
 
@@ -246,6 +347,7 @@ class CourseList extends HTMLElement {
             enrolled="${course.enrolled_count || 0}"
             published="${course.is_published}"
             image="${course.image_url || ''}"
+            is-enrolled="${course.is_enrolled || false}"
           ></course-card>
         `).join('')}
       </div>
@@ -633,11 +735,17 @@ class CourseForm extends HTMLElement {
     const descriptionInput = this.querySelector('#description');
     const teacherSelect = this.querySelector('#teacher_id');
     const publishedCheckbox = this.querySelector('#is_published');
+    const videoUrlInput = this.querySelector('#video_url');
+    const categorySelect = this.querySelector('#category');
+    const levelSelect = this.querySelector('#level');
 
     if (titleInput) titleInput.value = this.course.title || '';
     if (descriptionInput) descriptionInput.value = this.course.description || '';
     if (teacherSelect) teacherSelect.value = this.course.teacher_id || '';
     if (publishedCheckbox) publishedCheckbox.checked = this.course.is_published || false;
+    if (videoUrlInput) videoUrlInput.value = this.course.video_url || '';
+    if (categorySelect) categorySelect.value = this.course.category || '';
+    if (levelSelect) levelSelect.value = this.course.level || '';
   }
 
   async loadTeachers() {
@@ -734,6 +842,43 @@ class CourseForm extends HTMLElement {
               ${isTeacher ? html`
                 <p class="text-sm text-gray-500 mt-1">You are creating this course for yourself</p>
               ` : ''}
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div>
+              <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+              <select 
+                id="category" 
+                name="category" 
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select a category</option>
+                <option value="web-dev">Web Development</option>
+                <option value="mobile">Mobile Development</option>
+                <option value="data-science">Data Science</option>
+                <option value="design">Design</option>
+                <option value="programming">Programming</option>
+                <option value="database">Database</option>
+                <option value="devops">DevOps</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="level" class="block text-sm font-medium text-gray-700 mb-2">Level *</label>
+              <select 
+                id="level" 
+                name="level" 
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select a level</option>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
             </div>
           </div>
           
@@ -870,6 +1015,8 @@ class CourseForm extends HTMLElement {
           title: formData.get('title'),
           description: formData.get('description'),
           video_url: formData.get('video_url'),
+          category: formData.get('category'),
+          level: formData.get('level'),
           is_published: formData.has('is_published')
         };
 
@@ -892,6 +1039,12 @@ class CourseForm extends HTMLElement {
         if (!courseData.title.trim()) {
           throw new Error('Course title is required');
         }
+        if (!courseData.category) {
+          throw new Error('Course category is required');
+        }
+        if (!courseData.level) {
+          throw new Error('Course level is required');
+        }
 
         let response;
         if (this.isEdit) {
@@ -908,16 +1061,19 @@ class CourseForm extends HTMLElement {
           window.SchoolApp.showFlash('Course created successfully!', 'success');
         }
         
+        // Get the course ID from response
+        const courseId = response.id || this.courseId;
+        
         // Handle file uploads if any files are selected
         if (this.selectedFiles && this.selectedFiles.length > 0) {
-          await this.uploadFiles(response.id);
+          await this.uploadFiles(courseId);
         }
         
         // Redirect based on publication status
         if (courseData.is_published) {
-          window.location.href = `/courses/${response.id}`;
+          window.location.href = `/courses/${courseId}`;
         } else {
-          window.location.href = `/courses/${response.id}?draft=true`;
+          window.location.href = `/courses/${courseId}?draft=true`;
         }
       } catch (error) {
         console.error('Course operation error:', error);

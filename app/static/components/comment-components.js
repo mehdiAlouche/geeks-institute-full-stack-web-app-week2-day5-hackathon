@@ -199,6 +199,7 @@ class CommentSection extends HTMLElement {
 
   connectedCallback() {
     this.render();
+    this.setupEventListeners();
     // Wait for SchoolApp to be available
     this.waitForSchoolApp().then(() => {
       this.loadComments();
@@ -206,6 +207,7 @@ class CommentSection extends HTMLElement {
       console.error('SchoolApp not available:', error);
       this.loading = false;
       this.render();
+      this.setupEventListeners(); // Re-setup event listeners after re-render
     });
   }
 
@@ -259,10 +261,27 @@ class CommentSection extends HTMLElement {
       this.comments = response.comments || [];
       this.loading = false;
       this.render();
+      this.setupEventListeners(); // Re-setup event listeners after re-render
     } catch (error) {
       this.loading = false;
       this.render();
+      this.setupEventListeners(); // Re-setup event listeners after error render
       console.error('Failed to load comments:', error);
+      
+      // Show user-friendly error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4 mb-4';
+      errorDiv.innerHTML = `
+        <div class="flex items-center">
+          <i class="bi bi-exclamation-triangle text-red-600 mr-2"></i>
+          <span class="text-red-800">Failed to load comments. Please refresh the page.</span>
+        </div>
+      `;
+      
+      const container = this.querySelector('.bg-white');
+      if (container) {
+        container.insertBefore(errorDiv, container.firstChild);
+      }
     }
   }
 
@@ -335,18 +354,26 @@ class CommentSection extends HTMLElement {
   }
 
   setupEventListeners() {
-    this.addEventListener('click', async (e) => {
+    // Remove any existing event listeners to prevent duplicates
+    this.removeEventListener('click', this.handleClick);
+    
+    // Add new event listener
+    this.handleClick = async (e) => {
       if (e.target.closest('#submit-comment')) {
         e.preventDefault();
+        e.stopPropagation();
         await this.submitComment();
       }
-    });
+    };
+    
+    this.addEventListener('click', this.handleClick);
   }
 
   async submitComment() {
     const fileId = this.getAttribute('file-id');
     const courseId = this.getAttribute('course-id');
     const commentText = this.querySelector('#new-comment').value.trim();
+    const submitBtn = this.querySelector('#submit-comment');
     
     if (!commentText) {
       window.SchoolApp.showFlash('Please enter a comment', 'warning');
@@ -359,6 +386,12 @@ class CommentSection extends HTMLElement {
     }
 
     try {
+      // Show loading state
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split mr-2"></i>Posting...';
+      }
+
       const commentData = {
         comment: commentText
       };
@@ -369,18 +402,25 @@ class CommentSection extends HTMLElement {
         commentData.course_id = courseId;
       }
 
-      await window.SchoolApp.apiCall('/comments', {
+      const response = await window.SchoolApp.apiCall('/comments', {
         method: 'POST',
         body: JSON.stringify(commentData)
       });
 
       window.SchoolApp.showFlash('Comment posted successfully!', 'success');
       this.querySelector('#new-comment').value = '';
-      this.loadComments();
+      await this.loadComments();
       
     } catch (error) {
       console.error('Comment submission error:', error);
-      window.SchoolApp.showFlash('Failed to post comment', 'error');
+      const errorMessage = error.message || 'Failed to post comment';
+      window.SchoolApp.showFlash(errorMessage, 'error');
+    } finally {
+      // Reset button state
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-send mr-2"></i>Post Comment';
+      }
     }
   }
 }

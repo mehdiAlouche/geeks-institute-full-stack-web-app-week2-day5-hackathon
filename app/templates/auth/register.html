@@ -50,30 +50,50 @@
         
         <div>
           <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-          <input 
-            id="password" 
-            name="password" 
-            type="password" 
-            autocomplete="new-password" 
-            required 
-            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-            placeholder="Create a password"
-            minlength="6"
-          >
+          <div class="relative">
+            <input 
+              id="password" 
+              name="password" 
+              type="password" 
+              autocomplete="new-password" 
+              required 
+              class="mt-1 appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+              placeholder="Create a password"
+              minlength="6"
+            >
+            <button 
+              type="button" 
+              id="toggle-password" 
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none mt-1"
+              onclick="togglePasswordVisibility('password', 'password-icon')"
+            >
+              <i id="password-icon" class="bi bi-eye"></i>
+            </button>
+          </div>
           <p class="mt-1 text-xs text-gray-500">Password must be at least 6 characters long</p>
         </div>
         
         <div>
           <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-          <input 
-            id="confirm-password" 
-            name="confirm-password" 
-            type="password" 
-            autocomplete="new-password" 
-            required 
-            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-            placeholder="Confirm your password"
-          >
+          <div class="relative">
+            <input 
+              id="confirm-password" 
+              name="confirm-password" 
+              type="password" 
+              autocomplete="new-password" 
+              required 
+              class="mt-1 appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+              placeholder="Confirm your password"
+            >
+            <button 
+              type="button" 
+              id="toggle-confirm-password" 
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none mt-1"
+              onclick="togglePasswordVisibility('confirm-password', 'confirm-password-icon')"
+            >
+              <i id="confirm-password-icon" class="bi bi-eye"></i>
+            </button>
+          </div>
         </div>
         
         <div>
@@ -123,6 +143,20 @@
 
 {% block scripts %}
 <script>
+  // Toggle password visibility
+  function togglePasswordVisibility(inputId, iconId) {
+    const passwordInput = document.getElementById(inputId);
+    const passwordIcon = document.getElementById(iconId);
+    
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      passwordIcon.className = 'bi bi-eye-slash';
+    } else {
+      passwordInput.type = 'password';
+      passwordIcon.className = 'bi bi-eye';
+    }
+  }
+
   // Handle form submission
   document.getElementById('register-form').addEventListener('submit', async function(e) {
     e.preventDefault();
