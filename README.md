@@ -6,13 +6,23 @@ This project demonstrates CRUD operations, relational database design, analytics
 
 ---
 
+## 🚀 Live Demo
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Watch%20Video-blue?style=for-the-badge)](https://www.loom.com/share/ddc202403860441994a3abfe2ce87617?sid=68e846d4-29a2-406d-b7af-787c79b4d4b1)
+
+**📹 [Watch the Demo Video](https://www.loom.com/share/ddc202403860441994a3abfe2ce87617?sid=68e846d4-29a2-406d-b7af-787c79b4d4b1)**
+
+---
+
 ## 📌 Features
 - 👩‍🏫 User roles: **teacher**, **student**, **admin**
-- 📚 Courses: create, update, publish/unpublish
+- 📚 Courses: create, update, publish/unpublish with categories and levels
 - 📂 Course files: videos, PDFs, documents (ordered)
 - 📝 Enrollments: students can enroll in courses
 - 💬 Comments: threaded replies and likes
 - 🔔 Notifications: simple alert system
+- 🔍 Advanced course filtering by category, level, and status
+- 🎨 Modern UI with Web Components and Tailwind CSS
 
 # 🎓 School Management System (Flask + PostgreSQL)
 
